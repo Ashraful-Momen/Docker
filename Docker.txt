@@ -1,0 +1,149 @@
+--------------------------------------What is containerized development-----------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+Docker=> for install a software , need dependency (library / package) for runnig . and I send those 
+-------- file to others ,they can run if they install those dependency(library/package). Docker
+         mainly a containerized all file + dependency as bundle. Now we can send this bundle to 
+         anyone to runnig the software without any hassle . 
+
+
+         Docker make easy to run and install any software.
+Defination: Docker is a platform/eco-system around creating and running containers.
+-----------
+
+# there are 2 part of Docker => 1. Image 2. Container 
+
+1.Image: A single file with all dependency and configrations , required to run a program.
+--------- one Image has more containers.
+
+2. Container: Is a instance of Image , create isolated environment to run program indivisually. 
+------------- 
+
+3. Docker client: Docker(CLI) -> tools that use to command line 
+-----------------
+4. Docker Server: Docker Daemon -> that responsible for creating Image and running container.
+-----------------
+
+5. Working Diagram: >>>Docker run Hello-World , for run this command first Docker findout image in 
+--------------------Docker Cli(My PC) , if not find then bring the images and dependency from Docker
+                    Hub. and run the command . 
+
+-------------------------------------------------------------------------------------------------
+-----------------------------------Install Docker--------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+Download Docker from official website . Before install in windows install wsl(windows subsystem for Linux)
+> active (windows feature on/off -> active virtual systm -> click ok ).
+>>> Now install Docker Normally
+
+---------------------------------------------------------------
+#namespacing : Isolating resources per processos or group of process . 
+--------------
+
+#Control Group: Limit amount of resources used per user.
+---------------
+
+#Image: 1. Files Snapshot (copy some of resource for creating container/isolated env to run specific software).
+-------
+
+#Container: is a small copy / iso env of image ... 
+-----------
+
+#kernal : kernal is a software that's directly communicate with the hardware. (many drivers actually)
+---------
+
+#OS: A Operating Apps use kernal to operate.
+-----
+
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
+
+
+
+-------------------------------------------------------------------------------------------------
+----------------------------------------Install Docker in WSL---------------------------------------------------------
+Download wsl from windows store . 
+----------------------------------
+windows feature on/off -> hyper V (click) -> virtualization(click)-> WindwosVirtualization(click)
+----------------------------------
+restart > downlaod docker > install > restart > run Docker desktop.
+-------------------------------------------------------------------------------------------------
+--------------------------------------Main Part From Here-----------------------------------------------------------
+goto official docker website -> get started -> git clone https://github.com/docker/getting-started-app.git
+------------------------------
+follow step by step 
+-----------------------------
+---------------------------------------
+build docker image in current directory
+---------------------------------------
+>>> docker build -t getting-started . (build image as getting started)
+----------------------------------------
+check images >>> docker images 
+----------------------------------------
+----------------------------------------
+to run container from image >>> docker run -dp lookback:port imageName. >>> docker run -dp 127.0.0.1:3000:3000 getting-started
+----------------------------------------
+----------------------------------------
+if port confilect with same port then use those command -> docker run  127.0.0.1:3000:3000 getting-started
+----------------------------------------
+----------------------------------------
+show the running process id >>>> docker ps 
+----------------------------------------
+----------------------------------------
+port mapping => if localhost 8080 port runnig and container run on 3000 then connect as >>> docker run -dp localhostAddress:8080:3000 ImageName .
+----------------------------------------
+docker stop the container >>> docker stop containderID 
+docker start the container >>> docker start containderID 
+-----------------------------------------
+show docker all container >>> docker ps -a 
+-----------------------------------------
+-----------------------------------------
+if we change code in image or working directory . for showing the change of code to container , need to 
+build the image again . before remove user >>> docker stop containerId. 
+-----------------------------------------
+container remove >>> docker rm containerId 
+-------------------------------------------
+-------------------------------------------
+# share docker container with others -> firstly create a account with docker hub -> create a repository as
+the same name of container name as public.
+------------------------
+pushing new image to docker hub -> 
+------------------------
+>>>docker tag local-image:tagname new-repo:tagname #creating repo in docker hub with local image.
+>>>docker push new-repo:tagname
+-------------------------------------------
+push in docker push -> docker push amshuvo64/getting-started:tagname [by default tagName take as latest or we can use as our wish Version1/2/3....]
+
+
+***we can't push local image in to dockerHub repo without login 
+login docker in terminal=> >>>> docker login -u userNameFromDockerHub >>> docker login -u amshuvo64
+
+if docker local image not match with dockerId/repo name , then we can change the name of our local 
+container . 
+
+#change the tag name >>> docker tag previousContainerName userNameFromDockerHub/repoNameAsContainerName 
+#change image name >>> docker tag getting-started amshuvo64/getting-started <-[dockerHub username/reponame]
+cheack the images >> docker images 
+
+now push to DockerhubRepo >>> docker push amshuvo64/getting-started:latest 
+
+so , Docker Hub repo already store the loacl container Images. 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+check this DockerHub repo working or not , that's why goto labs.play-with-Docker.com 
+
+then create a instance -> getting a terminal with 4 hours sessions.
+
+now pull the Dockerrepo >>>> docker run -p 3000:3000 amshuvo64/gettign-started [-p => port , 3000(hostMachin):3000(imageContainerPort)]
+
+if getting erro then change the platform Name of Image , so we need to convert the image as BrandNew images 
+>>> docker docker build --platform linux/amd64 -t amshuvo64/getting-started . [-t => tagNames]
+
+after change the platform then push again into dockerHub repo 
+>>>docker push amshuvo64/getting-started 
+
+then goto -> labs.play-with-Docker.com  -> click -> 3000 port -> run our project ...!
+
+
+-------------------------------------------------------------------
+if we want to pull images from dockerHub >>> docker pull amshuvo64/getting-started:latest
