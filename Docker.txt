@@ -150,5 +150,31 @@ after change the platform then push again into dockerHub repo
 then goto -> labs.play-with-Docker.com  -> click -> 3000 port -> run our project ...!
 
 
--------------------------------------------------------------------
+---------------------pull the docker img----------------------------------------------
 if we want to pull images from dockerHub >>> docker pull amshuvo64/getting-started:latest
+
+----------------------------------------------------Directory Locations: -------------------------------------------------------
+Docker Binary: /usr/bin/docker
+Docker Daemon: /usr/bin/dockerd
+Docker Configuration: /etc/docker/
+Docker Systemd Service: /lib/systemd/system/docker.service
+Docker Socket: /var/run/docker.sock
+Docker Storage: /var/lib/docker/
+Docker Compose Binary: /usr/local/bin/docker-compose (if installed via the script) or /usr/bin/docker-compose (if installed via package managers)
+
+>>> sudo apt install docker && docker-compose
+
+>>>which docker
+>>>docker --version
+
+>>>which docker-compose
+>>>docker-compose --version
+
+>>>sudo systemctl status docker
+>>>sudo docker run hello-world
+
+>>>docker-compose --version
+
+
+
+
