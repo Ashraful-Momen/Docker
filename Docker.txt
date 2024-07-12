@@ -114,6 +114,9 @@ pushing new image to docker hub ->
 >>>docker tag local-image:tagname new-repo:tagname #creating repo in docker hub with local image.
 >>>docker push new-repo:tagname
 -------------------------------------------
+ex: docker build -t DOCKER_USERNAME/getting-started-todo-app . [build img]
+ex:docker push <DOCKER_USERNAME>/getting-started-todo-app . [push to docker hub]
+
 push in docker push -> docker push amshuvo64/getting-started:tagname [by default tagName take as latest or we can use as our wish Version1/2/3....]
 
 
