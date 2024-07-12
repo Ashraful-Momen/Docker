@@ -1,0 +1,172 @@
+Basic Commands
+Start services: docker-compose up
+
+Run services defined in docker-compose.yml
+Add -d to run in detached mode: docker-compose up -d
+Stop services: docker-compose down
+
+Stop and remove containers, networks, and images created by up
+Restart services: docker-compose restart
+
+View logs: docker-compose logs
+
+View logs of all services
+Add -f for follow mode: docker-compose logs -f
+View logs for a specific service: docker-compose logs <service_name>
+Build or rebuild services: docker-compose build
+
+Build services from the Dockerfile
+Add --no-cache to build without using cache: docker-compose build --no-cache
+Execute a command in a running container: docker-compose exec <service_name> <command>
+
+Example: docker-compose exec web bash
+List running services: docker-compose ps
+
+Scale services: docker-compose up --scale <service_name>=<number>
+
+Example: docker-compose up --scale web=3
+Stop a specific service: docker-compose stop <service_name>
+
+Remove stopped containers: docker-compose rm
+
+Add -f to force removal: docker-compose rm -f
+Configuration (docker-compose.yml)
+Basic Structure
+yaml
+Copy code
+version: '3.8'
+services:
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: example
+Service Definition
+Image: Specify the image to use
+
+yaml
+Copy code
+image: nginx
+Build: Build from a Dockerfile
+
+yaml
+Copy code
+build: .
+Ports: Map host ports to container ports
+
+yaml
+Copy code
+ports:
+  - "80:80"
+Volumes: Mount host directories as data volumes
+
+yaml
+Copy code
+volumes:
+  - ./data:/var/lib/mysql
+Environment Variables: Set environment variables
+
+yaml
+Copy code
+environment:
+  - POSTGRES_PASSWORD=example
+Command: Override the default command
+
+yaml
+Copy code
+command: ["bundle", "exec", "puma"]
+Networks: Connect services to networks
+
+yaml
+Copy code
+networks:
+  - front-tier
+  - back-tier
+Depends_on: Define dependencies between services
+
+yaml
+Copy code
+depends_on:
+  - db
+Networks
+Define Networks: Create custom networks
+
+yaml
+Copy code
+networks:
+  front-tier:
+  back-tier:
+Attach Services to Networks: Attach services to the defined networks
+
+yaml
+Copy code
+services:
+  web:
+    networks:
+      - front-tier
+  db:
+    networks:
+      - back-tier
+Volumes
+Define Volumes: Create named volumes
+
+yaml
+Copy code
+volumes:
+  db-data:
+Use Volumes in Services: Use the defined volumes in services
+
+yaml
+Copy code
+services:
+  db:
+    volumes:
+      - db-data:/var/lib/postgresql/data
+Tips and Tricks
+Override Configuration: Use multiple compose files
+
+bash
+Copy code
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+Environment Variables: Use .env file for environment variables
+
+env
+Copy code
+POSTGRES_PASSWORD=example
+Health Checks: Add health checks to services
+
+yaml
+Copy code
+healthcheck:
+  test: ["CMD-SHELL", "curl -f http://localhost || exit 1"]
+  interval: 1m30s
+  timeout: 10s
+  retries: 3
+Docker Compose CLI: Install the Docker Compose CLI plugin for advanced features
+
+bash
+Copy code
+docker-compose ls  # List all compose projects
+docker-compose kill  # Kill all containers in a compose project
+Sample Docker Compose File
+yaml
+Copy code
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+    environment:
+      FLASK_ENV: development
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
