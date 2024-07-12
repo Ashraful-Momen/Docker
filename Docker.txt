@@ -13,10 +13,12 @@ Defination: Docker is a platform/eco-system around creating and running containe
 # there are 2 part of Docker => 1. Image 2. Container 
 
 1.Image: A single file with all dependency and configrations , required to run a program.
---------- one Image has more containers.
+--------- one Image has more containers.[pre-build software/packages]
 
-2. Container: Is a instance of Image , create isolated environment to run program indivisually. 
+2. Container: Is a instance of Image , create isolated environment to run program indivisually. [when use a image or contain image for using is define as container]
 ------------- 
+****** Host machine[My device ] : Docker machine [container]. ex : my local_machine_host_port : docker_container_port.
+****** Base_class Image : Drive_class Container [Before delete image must be delete container , instance of img]
 
 3. Docker client: Docker(CLI) -> tools that use to command line 
 -----------------
