@@ -1,0 +1,212 @@
+version: '3.8'
+
+services:
+  laravel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel-app
+    restart: unless-stopped
+    ports:
+      - "8000:9000"  # Map port 8000 on host to port 9000 in container
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+    networks:
+      - laravel
+    user: "www-data"  # Ensure PHP-FPM runs as www-data user
+    depends_on:
+      - mysql
+      - phpmyadmin
+
+  mysql:
+    image: mysql:5.7
+    container_name: laravel-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - laravel
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"  # Map port 8080 on host to port 80 in container
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - laravel
+
+networks:
+  laravel:
+
+volumes:
+  mysql-data:
+
+# -------------------------------------------------------------------------------------------
+# version: '3.8' # this is the latest version | google it and know more on https://hub.docker.com/_/php
+# services: # services are containers | we can create multiple containers as service in this file
+#   laravel-app: # this is the name of the container laravel-app which will be created by dockerfile.
+#     build: # this means build the image
+#       context: . # from current directory
+#       dockerfile: Dockerfile # from current directory
+#     image: laravel-app
+#     container_name: laravel-app
+#     restart: unless-stopped
+#     ports:
+#       - "8000:9000"  # Map port 8000 on host to port 9000 in container
+#     volumes:        # means storage
+#       - .:/var/www # from my local machine
+#       - ./storage:/var/www/storage
+#     networks:
+#       - laravel
+#     user: "www-data"  # Ensure PHP-FPM runs as www-data user
+#     depends_on: # Add dependencies here
+#       - mysql
+#       - phpmyadmin
+
+#   mysql:
+#     image: mysql:5.7
+#     container_name: laravel-mysql
+#     restart: unless-stopped # this means if container is not running then start it | another option is:  always, restart, on-failure
+#     environment: # this is the environment variable for mysql container
+#       MYSQL_DATABASE: laravel
+#       MYSQL_ROOT_PASSWORD: root
+#       MYSQL_USER: laravel
+#       MYSQL_PASSWORD: secret
+#     volumes:
+#       - mysql-data:/var/lib/mysql
+#     networks:
+#       - laravel
+
+#   phpmyadmin:
+#     image: phpmyadmin/phpmyadmin # this is the image, install from docker hub
+#     container_name: phpmyadmin # this is the name for the container
+#     restart: always
+#     ports:
+#       - "8080:80"  # Map port 8080 on host to port 80 in container | my machine port is 8080: mapping to docker container port 80
+#     environment:
+#       PMA_HOST: mysql  # This should match the name of your MySQL service in the same docker-compose file
+#       MYSQL_ROOT_PASSWORD: root  # Use the MySQL root password you've set
+#     networks:
+#       - laravel
+
+# networks: # this is the docker network
+#   laravel:
+#     # driver: bridge  # docker default network: the bridge network
+
+# volumes: # this is the docker storage
+#   mysql-data: # this is the name of the storage for mysql
+
+
+
+#----------------------------------------------------------------------------------------------------------------------------
+# version: '3.8' #this is the latest version | google it and know more on https://hub.docker.com/_/php
+# services: #services are containers | we can create multiple containers as service in this file
+#   laravel-app: #this is the name of the container laravel-app which will be created by dockerfile. 
+#     build: #this means build the image
+#       context: . #from current directory
+#       dockerfile: Dockerfile #from current directory
+#     image: laravel-app
+#     container_name: laravel-app
+#     restart: unless-stopped
+#     ports:
+#       - "8000:9000"  # Map port 8000 on host to port 9000 in container
+   
+#     volumes:        #means storage
+#       - .:/var/www #from my local machine
+#       - ./storage:/var/www/storage
+#     networks:
+#       - laravel
+#     user: "www-data"  # Ensure PHP-FPM runs as www-data user
+
+#   mysql:
+#     image: mysql:5.7
+#     container_name: laravel-mysql
+#     restart: unless-stopped #this means if container is not running then start it | another option is:  always, restart, on-failure
+#     environment: #this is the environment variable for mysql container
+#       MYSQL_DATABASE: laravel
+#       MYSQL_ROOT_PASSWORD: root
+#       MYSQL_USER: laravel
+#       MYSQL_PASSWORD: secret
+#     volumes:
+#       - mysql-data:/var/lib/mysql
+#     networks:
+#       - laravel
+
+#   phpmyadmin:
+#     image: phpmyadmin/phpmyadmin #this is the image , install from docker hub
+#     container_name: phpmyadmin #this is the name for the container
+#     restart: always
+#     ports:
+#       - "8080:80"  # Map port 8080 on host to port 80 in container | my machine port is 8080 : maping to docker container port 80
+#     environment:
+#       PMA_HOST: mysql  # This should match the name of your MySQL service in the same docker-compose file
+#       MYSQL_ROOT_PASSWORD: root  # Use the MySQL root password you've set
+#     networks:
+#       - laravel
+
+# networks: #this is the docker network
+#   laravel:
+#     # driver: bridge  # docker default network:  the bridge network
+
+# volumes: #this is the docker storage
+#   mysql-data:
+
+
+
+#----------------------------------------------------------------------------------------------------------------------------
+# before running docker-compose up must be have file in dockerfile for each and every service (app/container)
+# ***each service must have its own file in dockerfile
+
+# docker-compose up -d --build  | to start all services | -d means run in background | -it means interactive | -v means volume | --build means build
+# docker-compose down -v
+
+# ***docker exec -it laravel-app bash | for console access this container. 
+
+# docker exec -it -u root laravel-app bash | run bash as root . 
+
+# docker exec -it laravel-app composer --version | to check composer version
+
+# ***docker exec -it --user root laravel-app composer create-project --prefer-dist laravel/laravel:^7.0 LaravelApp | to create project and run as root
+
+# ***docker exec -it --user root laravel-app chown -R www-data:www-data /var/www/LaravelApp | to change permissions
+# docker exec -it laravel-app ls -la | to list all files
+
+# ***docker logs -f laravel-app | to see logs
+
+# docker exec -it laravel-app php artisan serve | to start server
+
+# docker exec -it laravel-app pkill php | to kill server | to stop server
+
+# docker exec -it laravel-app php artisan migrate | to run migration
+
+# docker exec -it laravel-app php artisan db:seed | to run seed
+
+# docker exec -it laravel-app php artisan tinker | to run tinker
+
+# List of useful commands for docker-compose:------------------------------------------------------------------------------
+# docker-compose ps
+# docker-compose logs
+# docker-compose exec:
+
+
+# #run command from docker compose: --------------------------------------------------------------------------------------------
+# ┌─[✗]─[shuvo@parrot]─[~/LaravelPhp7/laravel_docker_project]
+# └──╼ $sudo docker-compose exec laravel-app chmod -R 775 storage
+
+# #container log from docker compose: 
+#     └──╼ $docker-compose logs laravel-app
+
+# #docker file install in local mechine : 
+#     └──╼ $sudo apt install libonig-dev
+
