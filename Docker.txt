@@ -32,6 +32,39 @@ Defination: Docker is a platform/eco-system around creating and running containe
 -------------------------------------------------------------------------------------------------
 -----------------------------------Install Docker--------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
+Optional: Start and Enable Docker Service
+
+To ensure Docker starts on boot and is running:
+
+    Start Docker service:
+
+    sh
+
+sudo systemctl start docker
+
+Enable Docker service to start on boot:
+
+sh
+
+    sudo systemctl enable docker
+
+Verify Installation
+
+To verify the installations:
+
+    Check Docker version:
+
+    sh
+
+docker --version
+
+Check Docker Compose version:
+
+sh
+
+    docker-compose --version
+
+
 Download Docker from official website . Before install in windows install wsl(windows subsystem for Linux)
 > active (windows feature on/off -> active virtual systm -> click ok ).
 >>> Now install Docker Normally
