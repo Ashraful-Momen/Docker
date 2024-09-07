@@ -116,7 +116,7 @@ build docker image in current directory
 check images >>> docker images 
 ----------------------------------------
 ----------------------------------------
-to run container from image >>> docker run -dp lookback:port imageName. >>> docker run -dp 127.0.0.1:3000:3000 getting-started
+to run container from image >>> docker run -dp lookback:port imageName. >>> docker run -dp 127.0.0.1:3000:3000 getting-started   |here -d is the ditouch mode or run in background.
 ----------------------------------------
 ----------------------------------------
 if port confilect with same port then use those command -> docker run  127.0.0.1:3000:3000 getting-started
