@@ -1,0 +1,56 @@
+#how to download a img form https://hub.docker.com/: 
+-----------------------------------------------------
+>>> docker pull image_name 
+>>> docker pull mysql:latest
+
+#show the docker img / container : 
+-----------------------------------
+>>> docker ps 
+>>> docker ps -a | show all imgs
+
+#
+
+#Run img in docker container : 
+-------------------------------
+>>> docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=your_password -d mysql:latest
+
+#Access MySQL from Outside the Container (Optional):
+-----------------------------------------------------
+>>>docker run --name mysql-container -p 3306:3306 -e MYSQL_ROOT_PASSWORD=your_password -d mysql:latest
+
+Check Active Containers: 
+-----------------------------------------------------
+>>> docker ps 
+
+
+#Check the container Logs (details about the container): 
+-----------------------------
+>>> docker logs <container_name_or_id>
+>>> docker logs mysql-container 
+
+
+
+#Connect with mysql shell : 
+-----------------------------
+>>>docker exec -it mysql-container mysql -uroot -p
+
+
+#Persistent Data Storage: 
+-------------------------
+By default, data inside Docker containers is not persistent. To ensure MySQL data is stored on your local machine 
+(so it's not lost when the container is removed), use Docker volumes.
+
+>>> docker run --name mysql-container -v /your/local/directory:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=your_password -d mysql:latest
+
+
+#Stop the MySQL container:
+----------------------------
+>>> docker stop mysql-container
+
+#Start the MySQL container:
+----------------------------
+>>> docker start mysql-container
+
+#Remove the MySQL container:
+----------------------------
+>>> docker rm -f mysql-container
