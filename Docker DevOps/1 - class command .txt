@@ -14,7 +14,7 @@
 -------------------------------
 >>> docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=your_password -d mysql:latest
 
-#Access MySQL from Outside the Container (Optional):
+#Access MySQL from Outside the Container (Optional- MySQL env setup):
 -----------------------------------------------------
 >>>docker run --name mysql-container -p 3306:3306 -e MYSQL_ROOT_PASSWORD=your_password -d mysql:latest
 
@@ -54,3 +54,60 @@ By default, data inside Docker containers is not persistent. To ensure MySQL dat
 #Remove the MySQL container:
 ----------------------------
 >>> docker rm -f mysql-container
+
+===================================================Main part =================================
+#run mysql container: 
+---------------------
+>>> docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=your_password -p 3306:3306 -d mysql:latest
+
+#run phpmyadmin : (if img is not exist auto download the img): 
+---------------------
+>>> docker run --name phpmyadmin-container -d --link mysql-container:db -p 8080:80 phpmyadmin/phpmyadmin
+
+
+#Now you can access the mysql admin => localhost:8080 , form your local machine. 
+
+check the docker systeminfo: 
+---------------------
+>>> docker inspect mysql-container
+
+
+
+#check the docker_ip address :
+---------------------
+>>> docker inspect -f "{{ .NetworkSettings.Networks.bridge.IPAddress }}" mysql-container
+
+#Find Docker's network range: :  
+---------------------
+>>> docker network ls
+
+#Inspect the network to get the IP range: 
+---------------------
+>>> docker network inspect bridge
+
+#list of docker volumes: 
+---------------------
+>>> docker volume ls
+
+#check mysql container volume : (Mount: volume section): 
+---------------------
+>>> docker volume inspect mysql-data
+
+check the volume with the name_of_volume: 
+---------------------------------------------
+>>> docker volume inspect 473d77219e1460781b5c2f752b1a45a81d5b8a566d3854ca1956cd39ec965c13
+------->output-------------------------> :
+[
+    {
+        "CreatedAt": "2024-09-07T18:12:58Z",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.volume.anonymous": ""
+        },
+        "Mountpoint": "/var/lib/docker/volumes/473d77219e1460781b5c2f752b1a45a81d5b8a566d3854ca1956cd39ec965c13/_data",
+        "Name": "473d77219e1460781b5c2f752b1a45a81d5b8a566d3854ca1956cd39ec965c13",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+---------------------
