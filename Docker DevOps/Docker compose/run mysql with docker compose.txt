@@ -1,0 +1,48 @@
+To check the status of your active Docker containers, you can use the following commands:
+
+### 1. **Check Active Containers**
+   This command lists all currently running containers:
+
+   ```bash
+   docker ps
+   ```
+
+   This will show output like the following:
+
+   ```
+   CONTAINER ID   IMAGE                   COMMAND                  CREATED        STATUS          PORTS                  NAMES
+   1a2b3c4d5e6f   mysql:latest            "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes    0.0.0.0:3306->3306/tcp mysql-container
+   7g8h9i0j1k2l   phpmyadmin/phpmyadmin   "/docker-entrypoint.…"   2 minutes ago   Up 2 minutes    0.0.0.0:80->80/tcp     phpmyadmin-container
+   ```
+
+   - **CONTAINER ID**: The unique identifier for each container.
+   - **IMAGE**: The image from which the container was started.
+   - **COMMAND**: The command the container is running.
+   - **CREATED**: When the container was created.
+   - **STATUS**: The current state of the container (`Up` means it's running).
+   - **PORTS**: The ports that are being exposed and mapped.
+   - **NAMES**: The name of the container.
+
+### 2. **Check All Containers (Including Stopped Containers)**
+   If you want to see all containers, including those that are stopped:
+
+   ```bash
+   docker ps -a
+   ```
+
+   This will list both running and stopped containers.
+
+### 3. **Check Container Logs**
+   You can also check the logs of a specific container by using:
+
+   ```bash
+   docker logs <container_name_or_id>
+   ```
+
+   For example, to check the logs of your MySQL container:
+
+   ```bash
+   docker logs mysql-container
+   ```
+
+This should help you monitor the status of your Docker containers. Let me know if you need more details or assistance!
