@@ -26,7 +26,7 @@ EXPOSE 80
 
 
 # ------------------------ install composer ------------------------------
-# Use the official PHP image with Apache
+    # Use the official PHP image with Apache
 FROM php:7.4-apache
 
 # Install system dependencies
@@ -48,11 +48,11 @@ RUN a2enmod rewrite
 # Install Composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Set working directory
-WORKDIR /var/www/html
+# Set the working directory to the Laravel public directory
+WORKDIR /var/www/html/public
 
 # Copy your PHP application files
-COPY . .
+COPY . /var/www/html
 
 # Give ownership to Apache user and group
 RUN chown -R www-data:www-data /var/www/html \
@@ -64,5 +64,94 @@ EXPOSE 80
 # Start Apache in the foreground
 CMD ["apache2-foreground"]
 
-===============================run the command for build img ==================================
->>> docker build -t my-php-app .
+
+
+
+# ================================== Docker img build command ==============================
+# >>> docker build -t my-php-app . | build app / container in the current folder. 
+
+# ========================================*****=================================
+# View summary of image vulnerabilities and recommendations → docker scout quickview
+# ==================================== Run the app ===================================
+# >>> docker run -d -p 8080:80 --name my-php-container my-php-app | run the container
+
+
+# ================================== Docker container access the bash ==============================
+# >>> docker exec -it my-php-container bash
+
+#=================================== run the container on localhost==================
+# >>>docker run -d -p 8080:80 --name my-php-app-container my-php-app
+
+
+
+# =========================================access composer bash with docker ======================
+# >>> docker exec -it my-php-container bash
+
+# ================================Out put ================================
+
+#    PS J:\Dokcer DevOps Class Batch 2409> docker run -d -p 8080:80 --name my-php-app-container my-php-app
+#    140a2062437d6912acc0c5e00c385ba9f3051fe48f21583b5420b6552e08454c
+#    PS J:\Dokcer DevOps Class Batch 2409> docker exec -it my-php-app-container bash
+#    root@140a2062437d:/var/www/html/public# whoami
+#    root
+#    root@140a2062437d:/var/www/html/public# composer --version
+#    Composer version 2.7.9 2024-09-04 14:43:28
+#    PHP version 7.4.33 (/usr/local/bin/php)
+#    Run the "diagnose" command to get more detailed diagnostics output.
+#    root@140a2062437d:/var/www/html/public# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ------------------------ install composer ------------------------------
+# # Use the official PHP image with Apache
+# FROM php:7.4-apache
+
+# # Install system dependencies
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     unzip \
+#     curl \
+#     libpng-dev \
+#     libonig-dev \
+#     libxml2-dev \
+#     zip
+
+# # Install PHP extensions
+# RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+
+# # Enable Apache rewrite module
+# RUN a2enmod rewrite
+
+# # Install Composer globally
+# RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# # Set working directory
+# WORKDIR /var/www/html
+
+# # Copy your PHP application files
+# COPY . .
+
+# # Give ownership to Apache user and group
+# RUN chown -R www-data:www-data /var/www/html \
+#     && chmod -R 755 /var/www/html
+
+# # Expose port 80
+# EXPOSE 80
+
+# # Start Apache in the foreground
+# CMD ["apache2-foreground"]
+
