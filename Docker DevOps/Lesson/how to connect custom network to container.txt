@@ -1,0 +1,3 @@
+
+
+>>> docker run --name phpmyadmin-container --link mysql-container:db -d -p 80:80 phpmyadmin/phpmyadmin
