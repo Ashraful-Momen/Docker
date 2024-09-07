@@ -111,3 +111,44 @@ check the volume with the name_of_volume:
     }
 ]
 ---------------------
+================================================DockerFile===============================================
+# Dockerfile for MySQL
+FROM mysql:latest
+
+# Set environment variables
+ENV MYSQL_ROOT_PASSWORD=your_password
+ENV MYSQL_DATABASE=your_db_name
+ENV MYSQL_USER=your_user
+ENV MYSQL_PASSWORD=your_password
+
+EXPOSE 3306
+
+
+# Dockerfile for phpMyAdmin
+FROM phpmyadmin/phpmyadmin
+
+# Set environment variables
+ENV PMA_HOST=mysql
+ENV PMA_USER=your_user
+ENV PMA_PASSWORD=your_password
+
+EXPOSE 80
+
+
+
+
+
+========================================connect one my_custom_network to another container ================
+>>> docker run --name phpmyadmin-container --link mysql-container:db -d -p 80:80 phpmyadmin/phpmyadmin
+>>> docker log phpmyadmin | check the connection status. 
+
+===========================================command for buid img form docker file ===============================
+>>> docker build -t custom-mysql -f Dockerfile.mysql .
+
+>>> docker build -t custom-phpmyadmin -f Dockerfile.phpmyadmin .
+
+============================================run mysql container=========================================
+>>> docker run -d --name mysql-container -p 3306:3306 custom-mysql
+
+============================================run phpmyadmin container=========================================
+>>> docker run -d --name phpmyadmin-container --link mysql-container:db -p 8080:80 custom-phpmyadmin
