@@ -1,3 +1,88 @@
 #run phpmyadmin : (if img is not exist auto download the img): 
 ---------------------
 >>> docker run --name phpmyadmin-container -d --link mysql-container:db -p 8080:80 phpmyadmin/phpmyadmin
+
+
+
+---------------------------------------------------------------Trouble shoot ---------------------------------------
+if the 8080 port is reserved by other service in your local machine . then run phpmyadmin-container in different port for avoiding port conflict. 
+
+#that's why remove the phpmyadmin container and it's image first : 
+------------------------------------------------------------------
+>>> docker rm container_name
+>>>> docker rmi image_name 
+
+#build the container again , if the img not found in docker io then download the image and buid the container : 
+-----------------------------------------------------------------------------------------------------------------
+>>> docker run --name phpmyadmin-container -d --link mysql-container:db -p 8081:80 phpmyadmin/phpmyadmin
+
+#To check the details of phpmyadmin/phpmyadmin: 
+-------------------------------------------------
+>>> docker inspect phpmyadmin-container
+
+#To check the logs(activities footprint) of phpmyadmin/phpmyadmin: 
+-------------------------------------------------
+>>> docker logs phpmyadmin-container
+
+
+--------------------------------------------------------------why use alias in --link -----------------------------------------------------------------------------
+
+The alias `db` in the `--link mysql-container:db` option is a name that you manually assign as an alias for the MySQL container inside the phpMyAdmin container. When you create this link, Docker automatically configures the phpMyAdmin container so that it can communicate with the MySQL container using the alias `db`.
+
+Here’s how it works and how you can verify it:
+
+### 1. How Docker `--link` Works
+When you link two containers with `--link`, Docker:
+- Provides environment variables inside the linked container (in this case, phpMyAdmin).
+- Sets up a DNS entry (alias) in the container that’s being linked to.
+
+In your case, the command `--link mysql-container:db` tells Docker to:
+- Create an alias called `db` that points to the IP address of the `mysql-container`.
+- Inside the phpMyAdmin container, you can connect to the MySQL database using `db` as the hostname, instead of using `localhost` or the container's IP address.
+
+### 2. How to Verify the Alias
+
+You can verify the alias exists and check how Docker sets up the alias by inspecting the running phpMyAdmin container.
+
+#### Step 1: Inspect Environment Variables
+
+Docker automatically adds environment variables for the linked container inside the phpMyAdmin container. These environment variables provide connection details to the MySQL container.
+
+Run the following command to inspect the environment variables:
+
+```bash
+docker exec phpmyadmin-container env
+```
+
+You should see variables like:
+
+```
+DB_PORT=tcp://172.18.0.2:3306
+DB_PORT_3306_TCP=tcp://172.18.0.2:3306
+DB_PORT_3306_TCP_ADDR=172.18.0.2
+DB_PORT_3306_TCP_PORT=3306
+DB_PORT_3306_TCP_PROTO=tcp
+DB_NAME=/phpmyadmin-container/db
+```
+
+This shows that `db` is an alias for the MySQL container, and it's reachable at IP `172.18.0.2` with port `3306`.
+
+#### Step 2: Check `/etc/hosts` File
+
+Docker also adds an entry for the `db` alias in the `hosts` file of the phpMyAdmin container. You can check the `/etc/hosts` file inside the phpMyAdmin container:
+
+```bash
+docker exec phpmyadmin-container cat /etc/hosts
+```
+
+You should see a line like this:
+
+```
+172.18.0.2   db
+```
+
+This confirms that the alias `db` points to the IP address of the `mysql-container`.
+
+### 3. Using `db` as the Hostname in phpMyAdmin
+
+When you access phpMyAdmin (by going to `http://localhost:8080`), you can use `db` as the MySQL server hostname in the phpMyAdmin interface. This tells phpMyAdmin to connect to the MySQL container using the `db` alias.
