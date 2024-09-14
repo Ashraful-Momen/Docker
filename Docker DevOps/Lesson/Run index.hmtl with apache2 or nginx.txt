@@ -1,0 +1,26 @@
+Dockerfile: 
+---------------
+# -------------------------------apache2 -----------------------------
+    # Use the official httpd (Apache) image as the base
+FROM httpd:2.4
+
+# Copy your index.html file into the default Apache document root
+COPY index.html /usr/local/apache2/htdocs/
+
+# Expose port 80
+EXPOSE 80
+
+# -------------------------------Nginx--------------------------
+    # Use the official Nginx image as the base
+# FROM nginx:alpine
+
+# # Copy your index.html file into the default Nginx directory
+# COPY index.html /usr/share/nginx/html/index.html
+
+# # Expose port 80
+# EXPOSE 80
+=============================================
+>>>> docker build -t host_web_file
+>>>>docker images | show the all images . 
+>>>> docker run --name host_web_file_container -p 8000:80 -d host_web_file
+>>>>docker ps | show the running container. 
