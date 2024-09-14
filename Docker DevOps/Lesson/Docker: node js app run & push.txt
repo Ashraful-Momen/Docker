@@ -1,0 +1,89 @@
+==================================================== Main Part =======================================================
+#Dockerfile: 
+# ------------
+
+# syntax=docker/dockerfile:1  | declear the docker version 
+
+
+#call the node img form docker_hub: 
+FROM node:18-alpine  
+
+#declear the working folder on docker machine(container)
+WORKDIR /app
+
+# copy my_local_host_machinge to docker /app folder 
+COPY . .
+# RUN yarn install --production
+
+#install the all pkg which from in pakcages.json
+RUN npm install 
+
+#Run the container on 3000 from docker container 
+EXPOSE 3000   
+
+#run the command for start the app . main file in src/index.js
+CMD ["node", "src/index.js"] 
+
+
+#===============================package.json file ==========================================
+
+# {
+#   "name": "101-app",
+#   "version": "1.0.0",
+#   "main": "index.js",
+#   "license": "MIT",
+#   "scripts": {
+#     "prettify": "prettier -l --write \"**/*.js\"",
+#     "test": "jest",
+#     "dev": "nodemon src/index.js"
+#   },
+#   "dependencies": {
+#     "express": "^4.18.2",
+#     "mysql2": "^2.3.3",
+#     "sqlite3": "^5.1.2",
+#     "uuid": "^9.0.0",
+#     "wait-port": "^1.0.4"
+#   },
+#   "resolutions": {
+#     "ansi-regex": "5.0.1"
+#   },
+#   "prettier": {
+#     "trailingComma": "all",
+#     "tabWidth": 4,
+#     "useTabs": false,
+#     "semi": true,
+#     "singleQuote": true
+#   },
+#   "devDependencies": {
+#     "jest": "^29.3.1",
+#     "nodemon": "^2.0.20",
+#     "prettier": "^2.7.1"
+#   }
+# }
+
+#===============================end packages.json file ==========================================
+
+#build the image >>> docker build -t node_crud_app:tag_latest .     | last . is the current location of docker file
+
+#show the image >>>> docker images
+
+#run the container >>> docker run --name node_crud_app -p 3000:3000 -d node_crude_app
+
+#check the running container >>> docker ps 
+
+#check the all container >>> docker ps -a
+
+#build the tag for push the image >>>docker tag node_crud_app:latest amshuvo64/test:node_crud_app_img  | here amshuvo/test is the docker hub directory . 
+
+#docker push >>> docker push amshuvo64/test:node_crud_app_img
+
+# The push refers to repository [docker.io/amshuvo64/test]
+# 22b26e2a4d09: Pushed
+# e68cb236f60a: Pushed
+# 0e0ef27dab2b: Pushed
+# e2be10e97665: Mounted from library/node
+# 06fd85419b65: Mounted from library/node
+# f58c462fa079: Mounted from library/node
+# 63ca1fbb43ae: Mounted from library/node
+# node_crud_app_img: digest: sha256:6dd53bfc0fc897d704b44843814334fc11ed856525721adb98ce312239ad0c3b size: 1787
+# PS J:\Bohubrihi\Docker\Docker\getting-started-app> 
