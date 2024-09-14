@@ -1,0 +1,45 @@
+#push the image to the docker hub : 
+------------------------------------
+
+# -------------------------------index.html -----------------------------
+Hello!
+
+# -------------------------------apache2 -----------------------------
+    # Use the official httpd (Apache) image as the base
+FROM httpd:2.4
+
+# Copy your index.html file into the default Apache document root
+COPY index.html /usr/local/apache2/htdocs/
+
+# Expose port 80
+EXPOSE 80
+
+# -------------------------------Nginx--------------------------
+    # Use the official Nginx image as the base
+# FROM nginx:alpine
+
+# # Copy your index.html file into the default Nginx directory
+# COPY index.html /usr/share/nginx/html/index.html
+
+# # Expose port 80
+# EXPOSE 80
+
+================= Run those command ============================
+>>>> docker build -t host_web_file
+>>>>docker images | show the all images . 
+>>>> docker run --name host_web_file_container -p 8000:80 -d host_web_file
+>>>>docker ps | show the running container. 
+
+================= Push the img to the Docker Hub ============================
+PS J:\Dokcer DevOps Class Batch 2409\Test> docker tag host_web_file:latest amshuvo64/test:upload_image
+PS J:\Dokcer DevOps Class Batch 2409\Test> docker push amshuvo64/test:upload_image 
+The push refers to repository [docker.io/amshuvo64/test]
+e0ebb4dc5774: Pushed
+fe791a52e8aa: Mounted from library/httpd
+c07c2ac88233: Mounted from library/httpd
+9410fd7a52d7: Mounted from library/httpd
+5f70bf18a086: Mounted from library/httpd
+0823b3739e74: Mounted from library/httpd
+8e2ab394fabf: Mounted from library/httpd
+upload_image: digest: sha256:ad53fdffdad8ab8a849f162272cb182683846356e4b54d5671938ce8dbc38e94 size: 1779
+PS J:\Dokcer DevOps Class Batch 2409\Test> 
