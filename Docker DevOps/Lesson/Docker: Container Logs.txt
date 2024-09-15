@@ -1,0 +1,2 @@
+>>> docker logs container_id
+>>>> docker logs 5834722d1c44
