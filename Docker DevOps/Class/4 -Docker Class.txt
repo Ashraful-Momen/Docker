@@ -1,0 +1,57 @@
+
+#if we run any container by default is run on our host maching ip with bridge network adapter. 
+
+#show the network lists>>> docker network ls 
+
+#show the network details >>> docker inspect my_network_name
+
+
+# >>> docker -d -p --network host | by default network nginx use 80
+# >>> docker inspect nginx 
+
+#create the custome network >>> docker network create custom-network. 
+
+# ------------- run the container in custom network -----------------
+    >>> docker run -d --name my_container -p 80:3000 -e  --network my_custom_network <image_name>
+
+    >>>docker run -d --name web_server --network my_custom_network nginx
+
+    >>>docker inspect my_container
+
+
+#---------------- connect my container into my cutom network --------------------
+    >>> docker network connect my_custom_network my_container
+    
+#---------------- disconnect my container into my cutom network --------------------
+    >>> docker network disconnect <network_name> <container_id>
+    
+#---------------- Communicating Between Containers in the Custom Network --------------------
+    #after access the docker container shell then : >>> docker exec -it container_id sh
+    >>> ping container_name
+    >>> ping db_server
+
+
+
+
+# ==================================================================================
+Example: Running a Web and Database Container in a Custom Network
+Create a custom network:
+
+
+>>> docker network create my_custom_network
+Run a web server container in the network:
+
+
+>>> docker run -d --name web_server --network my_custom_network nginx
+Run a database container in the same network:
+
+
+>>> docker run -d --name db_server --network my_custom_network mysql
+The two containers (web_server and db_server) will now be able to communicate with each other by name within the custom network.
+
+# ===============================================================
+How access the bash : 
+# ------------------------
+    >>>> docker exec -it container_id sh
+
+    >>>> docker exec -it d15eb0cb66b5 sh
