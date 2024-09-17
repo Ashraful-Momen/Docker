@@ -55,3 +55,7 @@ How access the bash :
     >>>> docker exec -it container_id sh
 
     >>>> docker exec -it d15eb0cb66b5 sh
+#==================================fix : if custom container sh ping isn't working ================================
+>>>docker exec -it web_server sh
+>>>apt update
+>>>apt install iputils-ping
