@@ -1,0 +1,35 @@
+#Default Bridge:
+----------------
+By default docker provide us the bridge network , which connet with our eth0 host machine . if we build any container and run 
+those app run on docker bridge network. 
+
+check the network >>> ifconfig
+check docker network >>> docker network ls
+check docker network details >>> docker network inspect network_id
+
+
+#Custom Bridge: 
+-----------------
+we can create custom network with docker , whcih also run bridge driver . we connect run mutiple app on our custom network . 
+custom network create the network isolation . that means another different brige add and connect host maching . 
+create custom network >>> docker network create custom_network_name
+connect app on custom network >>> docker network connect container_name
+disconnect app on custom network >>> docker network disconnect container_name
+check the custom_network details >>> docker network inspect network_id
+
+
+#check bridge link (which container connect with custom_network in which host ): >>> bridge link
+
+#build custom network : >>> docker network create my_network
+
+#create contaier and connect with custom network: 
+-----------------------------------------------------
+1. docker run -itd --name loki_container --network my_network busybox
+2. docker run -itd --name moki_container --network my_network busybox
+3. docker run -itd --name web_server_container --network my_network nginx
+
+#access the shell of those container >  docker exec -it container_name sh
+#/:ping loki
+#/:ping moki
+
+***by default nginx run on 80 port. after shell access the ping if not working then install the >>>apt install iputils-ping
