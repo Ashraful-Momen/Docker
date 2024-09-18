@@ -26,10 +26,20 @@ check the custom_network details >>> docker network inspect network_id
 -----------------------------------------------------
 1. docker run -itd --name loki_container --network my_network busybox
 2. docker run -itd --name moki_container --network my_network busybox
-3. docker run -itd --name web_server_container --network my_network nginx
+3. docker run -itd --name web_server_container --network my_network -p 80:80 nginx
 
 #access the shell of those container >  docker exec -it container_name sh
 #/:ping loki
 #/:ping moki
 
 ***by default nginx run on 80 port. after shell access the ping if not working then install the >>>apt install iputils-ping
+
+#we can connect a container to the Host I mean etho0 bridge directly : 
+-------------------------------------------------------------------------
+1. docker run -itd --name web_server_container --network host -p 80:80 nginx
+
+#access container shell : 
+---------------------------
+1. docker exec -itd loki_container sh
+2. ping moki_container 
+4. ping web_server_container
