@@ -1,0 +1,162 @@
+Here’s a revised version of your Docker networking notes with improved clarity, diagrams, and explanations:
+
+---
+
+# Default Bridge Network:
+-------------------------
+By default, Docker provides a bridge network that connects containers to the `eth0` interface of the host machine. Any container that is created without specifying a network runs on Docker's default bridge.
+
+```
+  Host Machine (eth0)
+      |
+  +-------------+
+  | Docker0     |  <---- Docker's default bridge
+  +-------------+
+      |
++---------+  +---------+
+| Container1|  |Container2|
++---------+  +---------+
+```
+
+### Check the Network:
+- Check host network interfaces:  
+  ```
+  ifconfig
+  ```
+- List Docker networks:  
+  ```
+  docker network ls
+  ```
+- Inspect details of a Docker network:  
+  ```
+  docker network inspect <network_id>
+  ```
+
+---
+
+# Custom Bridge Network:
+-------------------------
+Docker allows creating custom networks, which run using the bridge driver. This creates network isolation, meaning you can run multiple apps in the same custom network. Each custom bridge creates a new virtual bridge that connects to the host machine.
+
+```
+      Custom Network (my_network)
+      +-------------------+
+      |                   |
++-----------+      +-----------+      +-----------+
+| Container1| ---- |  Bridge   | ---- |  Host     |
++-----------+      +-----------+      +-----------+
+      |                   |
+   App1                 App2
+```
+
+### Create a Custom Network:
+```
+docker network create my_network
+```
+
+### Connect a Container to Custom Network:
+```
+docker network connect my_network container_name
+```
+
+### Disconnect a Container from Custom Network:
+```
+docker network disconnect my_network container_name
+```
+
+### Inspect Custom Network Details:
+```
+docker network inspect <network_id>
+```
+
+---
+
+# Managing Custom Network:
+---------------------------
+### Create a Custom Network:
+```
+docker network create my_network
+```
+
+### Create Containers and Connect to Custom Network:
+1. Create containers and specify the network:
+    ```
+    docker run -itd --name loki_container --network my_network busybox
+    docker run -itd --name moki_container --network my_network busybox
+    docker run -itd --name web_server_container --network my_network -p 80:80 nginx
+    ```
+
+2. Access the container shell and test communication:
+    ```
+    docker exec -it loki_container sh
+    /# ping moki_container
+    ```
+
+### Access Docker Containers on a Browser (Bridge/Custom Bridge Network):
+Access via the host machine's IP address:
+```
+http://my_machine_ip:host_port (e.g., http://localhost:80)
+```
+
+### Access Docker Container on the Host Network:
+By connecting the container directly to the host network, the container shares the host machine’s IP address. No need to specify a port:
+```
+docker run -itd --name web_server_container --network host -p 80:80 nginx
+```
+
+Access the container using the host's IP:
+```
+http://localhost
+```
+
+---
+
+# Fix: Container Stops in Background Process:
+If a container stops when running in the background, you can restart Docker and check the status:
+
+- Check containers running on the host network:
+    ```
+    docker ps --filter "network=host"
+    ```
+
+- Restart Docker:
+    ```
+    sudo systemctl restart docker
+    ```
+
+- Check Nginx status:
+    ```
+    sudo systemctl status nginx
+    ```
+
+- Stop Nginx service:
+    ```
+    sudo service nginx stop
+    ```
+
+---
+
+# Docker Network Overview:
+---------------------------
+### Example Network Interfaces (`ifconfig`):
+```
+docker0:  The default Docker bridge
+eth0:     The host's Ethernet interface
+lo:       Localhost interface
+vethX:    Virtual interfaces for containers
+```
+
+For example:
+```
+docker0: 172.17.0.1
+eth0:    192.168.3.21
+```
+
+### Inspect a Docker Custom Bridge Network:
+```
+docker network inspect br-<network_id>
+```
+
+---
+
+This version includes clear explanations and step-by-step commands, with an emphasis on network diagrams and structured notes. Let me know if you'd like more details!
