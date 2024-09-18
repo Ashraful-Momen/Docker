@@ -1,0 +1,88 @@
+To access your GitLab instance via SSH over the internet, follow these steps:
+
+### 1. *Open Port 22*
+Ensure that your server's firewall allows traffic on port 22 (SSH). If you haven’t already done so, use:
+
+For ufw (Ubuntu/Debian-based):
+
+bash
+sudo ufw allow 22/tcp
+sudo ufw reload
+
+
+For other firewalls, make sure to open port 22 or configure security group rules if you are using a cloud provider (e.g., AWS, Azure).
+
+### 2. *Expose SSH Port in Docker Compose*
+Ensure that the GitLab container is exposing port 22. In the docker-compose.yml file, confirm that this line exists under the ports section for the GitLab service:
+
+yaml
+ports:
+  - "22:22"
+
+
+This maps the container's SSH port (22) to the host machine's SSH port (22), making it available over the internet.
+
+### 3. *Set the GitLab SSH URL*
+You need to configure GitLab’s SSH URL to reflect your public IP. Update the GITLAB_OMNIBUS_CONFIG in the docker-compose.yml to:
+
+yaml
+environment:
+  GITLAB_OMNIBUS_CONFIG: |
+    external_url 'http://your-real-ip'
+    gitlab_rails['gitlab_shell_ssh_port'] = 22
+
+
+This ensures that GitLab knows to use port 22 for SSH access.
+
+After modifying the docker-compose.yml, restart your GitLab service:
+
+bash
+docker-compose down
+docker-compose up -d
+
+
+### 4. *Configure SSH Keys in GitLab*
+1. *Generate SSH Key (if you don’t have one)*:
+   On your local machine, generate an SSH key if you don't have one:
+
+   bash
+   ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+   
+
+   Press Enter through the prompts to accept the defaults.
+
+2. *Add the Public Key to GitLab*:
+   Copy the SSH key to your clipboard:
+
+   bash
+   cat ~/.ssh/id_rsa.pub
+   
+
+   Go to your GitLab profile (on your GitLab web interface):
+   - Navigate to *User Settings* > *SSH Keys*.
+   - Paste the SSH public key and save.
+
+### 5. *Access GitLab Over SSH*
+Now, you should be able to clone repositories via SSH using the public IP of your server.
+
+For example, if your GitLab instance’s public IP is 123.123.123.123, you can clone a repository as:
+
+bash
+git clone git@123.123.123.123:username/repo.git
+
+
+When you clone for the first time, you will be prompted to add the host to your list of known hosts. Type yes to accept.
+
+### 6. *Testing SSH Connection*
+To test the connection:
+
+bash
+ssh git@your-real-ip
+
+
+This should connect you to GitLab's SSH server. If the connection works, you can interact with GitLab through SSH for Git operations.
+
+### Troubleshooting:
+- Ensure that the machine hosting GitLab is reachable over the internet via its public IP.
+- Check that no network device, such as a router, is blocking port 22.
+- If you’re behind a NAT router, ensure you have port forwarding configured to forward port 22 to your Docker server’s internal IP.
