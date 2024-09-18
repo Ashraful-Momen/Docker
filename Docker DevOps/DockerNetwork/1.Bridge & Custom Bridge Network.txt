@@ -43,3 +43,64 @@ check the custom_network details >>> docker network inspect network_id
 1. docker exec -itd loki_container sh
 2. ping moki_container 
 4. ping web_server_container
+
+---------------------------------------------- docker network introduction ----------------------------------------------------------
+┌──(ashraful㉿kali)-[~]
+└─$ ifconfig                                                        
+br-0a757bd00405: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.18.0.1  netmask 255.255.0.0  broadcast 172.18.255.255
+        inet6 fe80::42:daff:fe62:a6b2  prefixlen 64  scopeid 0x20<link>
+        ether 02:42:da:62:a6:b2  txqueuelen 0  (Ethernet)
+        RX packets 4622  bytes 268198 (261.9 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 6678  bytes 9770540 (9.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:f1:77:ca:b1  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.3.21  netmask 255.255.255.0  broadcast 192.168.3.255
+        inet6 fe80::b62e:99ff:fe7b:7d15  prefixlen 64  scopeid 0x20<link>
+        ether b4:2e:99:7b:7d:15  txqueuelen 1000  (Ethernet)
+        RX packets 75931  bytes 102125524 (97.3 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 60677  bytes 6250332 (5.9 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 179138  bytes 113249739 (108.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 179138  bytes 113249739 (108.0 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+veth20cb45e: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet6 fe80::87b:e9ff:fe21:8306  prefixlen 64  scopeid 0x20<link>
+        ether 0a:7b:e9:21:83:06  txqueuelen 0  (Ethernet)
+        RX packets 15  bytes 1246 (1.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 30  bytes 2336 (2.2 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+veth472b0dc: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet6 fe80::7ce2:faff:fe75:795d  prefixlen 64  scopeid 0x20<link>
+        ether 7e:e2:fa:75:79:5d  txqueuelen 0  (Ethernet)
+        RX packets 11  bytes 854 (854.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 26  bytes 1944 (1.8 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+================================================================
+#here docker custom network bridge => br-0a757bd00405 
+#here docker eth0 bridge => eth0
+#here docker localhost bridge => lo
+#here docker container bridge => veth20cb45e:
+
+
