@@ -1,0 +1,103 @@
+#MacVlan: 
+---------
+MacVlan directly connect to the home router with it's own ip . every container gets their mac , ip and connect with network. 
+
+#create macvlan netowrk 
+-----------------------
+>>> sudo docker network create -d macvlan \
+> --subnet  172.0.1.0/24  \    
+> --getway : router_getway \    | ex
+> -o parent=eth0 \
+> newasgard 
+
+explain of command
+------------------ => subnet : | common_ip.common_ip.common_ip.0/24 |
+                   => newasgard is the name of the network
+                   => -d means driver -o means options. 
+
+#*** in macvlan every container specify the ip address (unique_ip_must) while create . 
+
+#create container : 
+-------------------
+>>> sudo docker run -itd --rm --netowrk newasgard --ip 172.0.1.3 --name loki busybox 
+
+in macvlan multiple container share their port with host machine thats break all that thing of security handle , 1 port share can best for host 1 mac
+but multiple mac with one port break the security issue. that's why use use promiscuous mode need to enable which is provided low security .
+if OS use in Vmware then enable the promiscous mode. Network > adapter > promicuous > enable.  and ***reboot. NO DHCP , all ip set as statics.
+
+#enable promiscous mode in host machine without Vmware: 
+-------------------------------------------------------
+>>> sudo ip link set eth0 promisc. 
+
+# now access the macvlan container sh and use ping command . without enable promicuous mode ping won't be working.
+ 
+
+#sub-interface: (add another network layer/bridge on Network section) (solve promicuous problem enable mode)
+-----------------
+#add macvlan container sub-interface(802.1q) . example loki_container mac => eth0.20
+#add macvlan container sub-interface(802.1q) . example moki_container mac => eth0.30
+
+
+#create macvlan sub-interface network : 
+------------------------------------------
+>>> docker network create -d macvlan --subnet 192.168.1.0/24 --getway 192.168.0.3 -o parent=eth0.20 macvlan20
+
+>>> ip addr show
+
+======================================================= IPvlan =====================================================
+IPvlan (L2):
+-------------- 
+# every container have ip address && connect with bridge (host eth0 ) while container creating as like custom bridge network.
+
+#create ipvlan netowrk (similar as macvlan): 
+------------------------
+>>> sudo docker network create -d ipvlan \
+> --subnet  172.0.1.0/24  \    
+> --getway : router_getway \    | ex
+> -o parent=eth0 \
+> newasgard 
+
+
+>>>ip addr show 
+
+>>> arp -a ip_address 
+
+IPvlan (L3): no need getway of router cause use eth0 as host for getway . 
+-------------- 
+
+network isolation bridge 1:  a. thor_container b.loki_container 
+network isolation bridge 2:  a. moki_container b.choki_container 
+
+bridge 1 ----------> eth0 ----------------> router 
+bridge 2 ----------> eth0 ----------------> router 
+
+[#this is the L3.]
+
+-------------------------------------------------
+
+
+#create L3 network : 
+----------------------
+>>> sudo docker network create -d ipvlan \
+> --subnet 192.168.3.0/24
+> -o parent=eth0 -o ipvlan_mode=l3
+> --subnet 192.168.4.0/24
+> -o parent=eth0 -o ipvlan_mode=l3
+> newasgard
+
+***here no need the getway . and -o means options ipvlan_mode=l3. Two subnet for 2 bridge. each bridge can have multiple container . 
+
+
+#create container for L3 : 
+----------------------------
+>>> sudo docker run -itd --rm --network newasgard  \
+> --ip 192.168.3.1 --name thor_container busybox
+
+>>> sudo docker run -itd --rm --network newasgard  \
+> --ip 192.168.3.2 --name loki_container busybox
+
+>>> sudo docker run -itd --rm --network newasgard  \
+> --ip 192.168.4.1 --name moki_container busybox
+
+>>> sudo docker run -itd --rm --network newasgard  \
+> --ip 192.168.4.2 --name coki_container busybox
