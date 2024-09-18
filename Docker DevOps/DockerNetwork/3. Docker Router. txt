@@ -1,0 +1,105 @@
+To achieve communication between two Docker containers on different custom bridge networks, we can set up a router container that bridges both networks and routes traffic between them.
+
+Here’s how we can create two containers, each connected to a different bridge network, and use a router to enable communication between them.
+
+### Steps Overview
+1. Create two custom bridge networks (`bridge1` and `bridge2`).
+2. Create two containers, each connected to one of the networks.
+3. Create a third container (router) and connect it to both networks.
+4. Set up routing on the router container.
+
+### Step-by-Step Process
+
+#### 1. **Create Custom Bridge Networks**
+```bash
+docker network create bridge1
+docker network create bridge2
+```
+
+#### 2. **Run Containers on Separate Networks**
+Run the first container on `bridge1`:
+```bash
+docker run -dit --name container1 --network bridge1 alpine sh
+```
+
+Run the second container on `bridge2`:
+```bash
+docker run -dit --name container2 --network bridge2 alpine sh
+```
+
+#### 3. **Create Router Container**
+Now, create a container that will act as a router and connect it to both networks (`bridge1` and `bridge2`):
+```bash
+docker run -dit --name router --network bridge1 --privileged alpine sh
+docker network connect bridge2 router
+```
+The `--privileged` flag allows us to manipulate networking inside the container.
+
+#### 4. **Configure Routing in the Router Container**
+Enter the router container:
+```bash
+docker exec -it router sh
+```
+
+Enable IP forwarding inside the router container:
+```bash
+echo 1 > /proc/sys/net/ipv4/ip_forward
+```
+
+Next, add routes between the two networks. This is necessary to forward traffic from one network to the other.
+
+- Get the network interfaces for `bridge1` and `bridge2`:
+```bash
+ip addr
+```
+- Add routing rules:
+```bash
+ip route add 172.18.0.0/16 via <bridge1-interface-ip>
+ip route add 172.19.0.0/16 via <bridge2-interface-ip>
+```
+Where `172.18.0.0/16` is the subnet for `bridge1` and `172.19.0.0/16` is the subnet for `bridge2`. Replace `<bridge1-interface-ip>` and `<bridge2-interface-ip>` with the actual interface IPs.
+
+#### 5. **Allow Containers to Reach Each Other**
+Now, you should configure the containers to route their traffic through the router.
+
+In **container1**:
+```bash
+docker exec -it container1 sh
+route add default gw <router-ip-on-bridge1>
+```
+
+In **container2**:
+```bash
+docker exec -it container2 sh
+route add default gw <router-ip-on-bridge2>
+```
+
+#### 6. **Verify Communication**
+Now, test connectivity by pinging one container from the other.
+
+From **container1**:
+```bash
+ping <container2-ip>
+```
+
+From **container2**:
+```bash
+ping <container1-ip>
+```
+
+### ASCII Diagram
+
+Here’s an ASCII representation of the network setup:
+
+```
+[container1]   <---- bridge1 ----> [router] <---- bridge2 ---->   [container2]
+  172.18.x.x                                 172.19.x.x
+```
+
+- **Bridge1** connects `container1` to `router`.
+- **Bridge2** connects `container2` to `router`.
+- The **router** forwards traffic between `bridge1` and `bridge2`, allowing `container1` and `container2` to communicate.
+
+---
+
+This setup creates two isolated networks that communicate via a router container. If you encounter any issues, feel free to ask!
