@@ -1,0 +1,151 @@
+Here’s a refined and more understandable version of your Docker networking note, including ASCII diagrams for explanation:
+MacVlan Networking:
+
+MacVlan allows containers to directly connect to the home router with their own IP address and MAC address. Each container gets a unique IP and MAC, making it appear as an independent device on the network.
+
+less
+
+ Home Router
+    |
+    +-----------------------------+
+    |                             |
+ Container1(IP: 172.0.1.3)    Container2(IP: 172.0.1.4)
+ (MAC: AA:BB:CC:DD:EE:01)     (MAC: AA:BB:CC:DD:EE:02)
+
+Create a MacVlan Network:
+
+lua
+
+sudo docker network create -d macvlan \
+  --subnet 172.0.1.0/24 \
+  --gateway <router_gateway> \
+  -o parent=eth0 \
+  newasgard
+
+Explanation:
+
+    --subnet: Defines the IP range (e.g., 172.0.1.0/24).
+    --gateway: Set to your home router's gateway IP.
+    -o parent: Specifies the physical network interface (e.g., eth0).
+    newasgard: Name of the network.
+
+Important:
+
+In MacVlan, each container needs to be assigned a unique static IP.
+Create a Container:
+
+css
+
+sudo docker run -itd --rm --network newasgard --ip 172.0.1.3 --name loki busybox
+
+Security Consideration:
+
+MacVlan allows containers to share network ports with the host, which can introduce security issues. This requires enabling promiscuous mode for the network interface, especially if running in a virtualized environment (VMware, etc.).
+Enable Promiscuous Mode:
+
+If using VMware, enable Promiscuous Mode from the settings:
+
+VMware > Network > Adapter > Promiscuous > Enable > Reboot
+
+Without VMware, enable it on the host machine:
+
+bash
+
+sudo ip link set eth0 promisc on
+
+Sub-Interfaces (802.1q):
+
+Sub-interfaces (VLAN tagging) can be used to add additional network layers and solve promiscuous mode issues.
+
+scss
+
+  Network Layer
+      |
+   +--------------------+
+   |     eth0.20         |    (VLAN ID 20)
+   |  Container1 (Loki)  |
+   +--------------------+
+   |     eth0.30         |    (VLAN ID 30)
+   |  Container2 (Moki)  |
+   +--------------------+
+
+Create MacVlan with Sub-Interface:
+
+lua
+
+sudo docker network create -d macvlan \
+  --subnet 192.168.1.0/24 \
+  --gateway 192.168.0.3 \
+  -o parent=eth0.20 \
+  macvlan20
+
+IPvlan Networking:
+Layer 2 (L2) IPvlan:
+
+Similar to MacVlan, every container gets its own IP and is connected to the network through the host interface (e.g., eth0). However, instead of using MAC addresses, IPvlan uses the host's MAC.
+
+less
+
+ Home Router
+    |
+    +--------------------------+
+    |                          |
+  Thor (IP: 172.0.1.3)    Loki (IP: 172.0.1.4)
+
+Create an IPvlan Network:
+
+lua
+
+sudo docker network create -d ipvlan \
+  --subnet 172.0.1.0/24 \
+  --gateway <router_gateway> \
+  -o parent=eth0 \
+  newasgard
+
+You can check network interfaces with:
+
+sql
+
+ip addr show
+
+Layer 3 (L3) IPvlan:
+
+L3 mode isolates networks by connecting each container through different subnet bridges. The host (eth0) becomes the gateway for the containers, and no router gateway is needed.
+
+lua
+
+ Network Isolation
+  Bridge 1        Bridge 2
+    |               |
+  +------+       +------+
+  | Thor |       | Moki |
+  | Loki |       | Coki |
+  +------+       +------+
+      \               /
+       \             /
+         eth0 ----> Router
+
+Create L3 Network:
+
+lua
+
+sudo docker network create -d ipvlan \
+  --subnet 192.168.3.0/24 \
+  -o parent=eth0 -o ipvlan_mode=l3 \
+  --subnet 192.168.4.0/24 \
+  -o parent=eth0 -o ipvlan_mode=l3 \
+  newasgard
+
+    ipvlan_mode=l3: Sets the network to L3 mode.
+    Each subnet (192.168.3.0/24, 192.168.4.0/24) represents a separate bridge.
+
+Create Containers for L3 Network:
+
+css
+
+sudo docker run -itd --rm --network newasgard --ip 192.168.3.1 --name thor_container busybox
+sudo docker run -itd --rm --network newasgard --ip 192.168.3.2 --name loki_container busybox
+sudo docker run -itd --rm --network newasgard --ip 192.168.4.1 --name moki_container busybox
+sudo docker run -itd --rm --network newasgard --ip 192.168.4.2 --name coki_container busybox
+
+This should provide a clearer structure with explanations and diagrams to better visualize the setup. Let me know if you'd like more adjustments!
