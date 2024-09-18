@@ -55,6 +55,31 @@ check the custom_network details >>> docker network inspect network_id
 2. ping moki_container 
 4. ping web_server_container
 
+
+============================================Fix:container stop if running in backgroud process ===================================================
+┌──(ashraful㉿kali)-[~]
+└─$ docker ps --filter "network=host"
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+                                                                                                                       
+┌──(ashraful㉿kali)-[~]
+└─$ sudo systemctl restart docker
+                                                                                                                       
+
+                                                                                                                       
+┌──(ashraful㉿kali)-[~]
+└─$ sudo systemctl status nginx
+○ nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; preset: disabled)
+     Active: inactive (dead)
+       Docs: man:nginx(8)
+                                                                                                                       
+┌──(ashraful㉿kali)-[~]
+└─$ ps aux | grep nginx
+ashraful   84704  0.0  0.0   6884  2048 pts/1    S+   14:03   0:00 grep --color=auto nginx
+                                                                                                                       
+┌──(ashraful㉿kali)-[~]
+└─$ sudo service nginx stop
+                               
 ---------------------------------------------- docker network introduction ----------------------------------------------------------
 ┌──(ashraful㉿kali)-[~]
 └─$ ifconfig                                                        
