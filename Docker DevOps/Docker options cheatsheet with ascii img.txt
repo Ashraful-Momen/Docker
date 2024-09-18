@@ -1,0 +1,302 @@
+Here’s a detailed Docker optional command guide with explanations, including ASCII diagrams, for better understanding:
+
+---
+
+# Docker Optional Commands Guide
+
+Docker provides several optional flags to configure and control containers. Here's a breakdown of some common options:
+
+---
+
+### 1. **`-d`**: **Run in Detached Mode**
+- This flag allows the container to run in the background (detached mode), freeing up the terminal.
+
+**Command**:
+```
+docker run -d <image>
+```
+
+**Diagram**:
+
+```
+Terminal          +--------------------+
+     |            | Container running   |
+     |            | in the background   |
+     +----------> | Detached Mode       |
+                  +--------------------+
+```
+
+---
+
+### 2. **`-it`**: **Interactive + Terminal Mode**
+- **`-i`** keeps STDIN open (interactive mode).
+- **`-t`** allocates a pseudo-TTY (terminal).
+
+**Command**:
+```
+docker run -it <image> sh
+```
+
+**Diagram**:
+
+```
+Terminal (Interactive)       +-------------------------+
+     +---------------------> | Container shell (sh/bash)|
+                              +-------------------------+
+```
+
+---
+
+### 3. **`-p`**: **Port Mapping**
+- This flag maps a port from the host to a container’s port, allowing external access to the container’s services.
+
+**Command**:
+```
+docker run -p <host_port>:<container_port> <image>
+```
+
+**Diagram**:
+
+```
+Host Machine      +--------------------+       Container
+(Port 80) <-----> | 80:80 Port Mapping  | <--> (Port 80: NGINX)
+                  +--------------------+
+```
+
+---
+
+### 4. **`--rm`**: **Remove Container on Exit**
+- Automatically remove the container when it stops.
+
+**Command**:
+```
+docker run --rm <image>
+```
+
+**Diagram**:
+
+```
+Start Container        +------------+
+     |                 | Container  |
+     +---------------> | Runs       |
+                       +------------+
+     Container stops -> Automatically removed
+```
+
+---
+
+### 5. **`--name`**: **Naming the Container**
+- Assign a custom name to a container, making it easier to manage.
+
+**Command**:
+```
+docker run --name my_container <image>
+```
+
+**Diagram**:
+
+```
+Container ID       +---------------------+
+     |            | Named Container:     |
+     +----------> | my_container         |
+                  +---------------------+
+```
+
+---
+
+### 6. **`-v`**: **Volume Mounting**
+- This option mounts a directory from the host machine to the container, allowing data persistence.
+
+**Command**:
+```
+docker run -v /host/dir:/container/dir <image>
+```
+
+**Diagram**:
+
+```
+Host Directory     +--------------------+
+ (/host/dir)       | Mounted to          |
+     |            -> /container/dir      |
+     +---------->  | in the Container    |
+                   +--------------------+
+```
+
+---
+
+### 7. **`--network`**: **Specifying a Network**
+- Attach the container to a specific Docker network.
+
+**Command**:
+```
+docker run --network <network_name> <image>
+```
+
+**Diagram**:
+
+```
++------------------+  +-----------------+
+| Custom Network   |  | Container        |
++------------------+--| Attached to      |
+                      | Network          |
+                      +-----------------+
+```
+
+---
+
+### 8. **`--env` or `-e`**: **Set Environment Variables**
+- Pass environment variables to the container.
+
+**Command**:
+```
+docker run -e "ENV_VAR=value" <image>
+```
+
+**Diagram**:
+
+```
+Environment Variables      +---------------------+
+     |                     | Inside Container    |
+     +------------------>  | ENV_VAR=value       |
+                            +---------------------+
+```
+
+---
+
+### 9. **`--link`**: **Linking Containers**
+- Allows communication between containers by name.
+
+**Command**:
+```
+docker run --link <container_name>:<alias> <image>
+```
+
+**Diagram**:
+
+```
++----------------+           +-----------------+
+| Container 1    |  <------> | Container 2      |
+| (alias)        |           | Communicates     |
++----------------+           +-----------------+
+```
+
+---
+
+### 10. **`--restart`**: **Restart Policy**
+- Set the restart policy for the container. Useful for ensuring containers automatically restart on failure or system reboot.
+
+**Command**:
+```
+docker run --restart=always <image>
+```
+
+**Diagram**:
+
+```
++------------------------+
+| Container crashes       |
++------------------------+
+| Restart automatically   |
++------------------------+
+```
+
+Options for restart:
+- `no` (default): No automatic restart.
+- `on-failure`: Restart on failures.
+- `always`: Always restart the container.
+
+---
+
+### 11. **`-u`**: **Specify User**
+- Run the container with a specific user or group.
+
+**Command**:
+```
+docker run -u <user>:<group> <image>
+```
+
+**Diagram**:
+
+```
+Host User           +---------------------+
+                    | Run Container As     |
+    +-------------> | Specified User/Group |
+                    +---------------------+
+```
+
+---
+
+### 12. **`--cpus`**: **Limit CPU Usage**
+- Limit the container's CPU usage.
+
+**Command**:
+```
+docker run --cpus="1.5" <image>
+```
+
+**Diagram**:
+
+```
++---------------------------+
+|  Container uses 1.5 CPUs   |
++---------------------------+
+```
+
+---
+
+### 13. **`--memory`**: **Limit Memory Usage**
+- Limit the memory the container can use.
+
+**Command**:
+```
+docker run --memory="512m" <image>
+```
+
+**Diagram**:
+
+```
++----------------------------+
+| Container limited to 512MB  |
++----------------------------+
+```
+
+---
+
+### 14. **`--detach-keys`**: **Set Custom Detach Key Sequence**
+- Set a custom key sequence for detaching from the container.
+
+**Command**:
+```
+docker run --detach-keys="ctrl-x" <image>
+```
+
+**Diagram**:
+
+```
+Terminal      +------------------+
+              | Detach using      |
+   +--------> | Custom Key (ctrl-x)|
+              +------------------+
+```
+
+---
+
+### 15. **`--log-driver`**: **Configure Logging Driver**
+- Set the logging driver for container logs.
+
+**Command**:
+```
+docker run --log-driver=syslog <image>
+```
+
+**Diagram**:
+
+```
+Logs           +----------------------+
+   +-------->  | Stored in syslog file |
+               +----------------------+
+```
+
+---
+
+This guide covers essential Docker flags used in day-to-day software engineering tasks, with ASCII images to visualize their functions. Let me know if you need further details!
