@@ -34,9 +34,20 @@ check the custom_network details >>> docker network inspect network_id
 
 ***by default nginx run on 80 port. after shell access the ping if not working then install the >>>apt install iputils-ping
 
+#access docker container on browser for bridge/custom_brige network: 
+-------------------------------------------------------------------
+1. http://my_machine_ip(docker0/ehto0/br-0a757bd00405):host_port
+>>> http://localhost:80 [if running nginx on 80 port]
+
+
 #we can connect a container to the Host I mean etho0 bridge directly : 
 -------------------------------------------------------------------------
 1. docker run -itd --name web_server_container --network host -p 80:80 nginx
+
+#access docker container on browser for host network (no port need): 
+-------------------------------------------------------------------
+1. http://my_machine_ip(docker0/ehto0/br-0a757bd00405)
+2. http://localhost
 
 #access container shell : 
 ---------------------------
