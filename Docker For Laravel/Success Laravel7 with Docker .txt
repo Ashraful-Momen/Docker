@@ -1,0 +1,65 @@
+#this application just run your laravel app without mysql . 
+#install laravel 7
+>>> composer create-project --prefer-dist laravel/laravel:^7.0 laravel_docker_project
+
+#create Dockerfile and docker-compose at root directory:
+
+Dockerfile:
+------------
+# Use the official PHP 7.4 image from Docker Hub
+FROM php:7.4-fpm
+
+# Set working directory inside the container
+WORKDIR /var/www/html
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install Composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Copy existing application directory contents to the container
+COPY . .
+
+# Install composer dependencies
+RUN composer install
+
+# Set permissions for Laravel
+RUN chown -R www-data:www-data /var/www/html/storage
+RUN chmod -R 775 /var/www/html/storage
+
+# Expose port 9000 and start php-fpm server
+# EXPOSE 9000
+# CMD ["php-fpm"]
+
+CMD php artisan serve --host=0.0.0.0 --port=8000
+EXPOSE 9000
+----------------------------------------------------------------------
+docker-compose.yml :
+-----------------------
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:9000"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
