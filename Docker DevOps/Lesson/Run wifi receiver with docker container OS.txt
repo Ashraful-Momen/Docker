@@ -1,0 +1,49 @@
+Running Kali OS in Docker imposes some limitations, especially when it comes to hardware access. By default, Docker containers are isolated from the host system's hardware, including networking interfaces like Wi-Fi cards. For using **monitor mode** with a Wi-Fi receiver inside a Kali container, you'll need to ensure that the Docker container has direct access to the host's wireless interface.
+
+Here are the steps and considerations:
+
+### Steps:
+1. **Check your Wi-Fi adapter compatibility**: 
+   Ensure your external Wi-Fi receiver supports monitor mode.
+
+2. **Allow Docker access to the network interface**:
+   Use the `--privileged` flag when running the container to give it access to the host's devices.
+   
+   ```bash
+   docker run --privileged --net=host -it kali
+   ```
+   - `--privileged` gives the container access to all devices on the host, including your Wi-Fi card.
+   - `--net=host` makes the container use the host's networking stack, giving it direct access to the network interfaces.
+
+3. **Pass the Wi-Fi interface to the container**:
+   If you want to limit the device exposure to only the Wi-Fi interface, you can specify it directly:
+   
+   ```bash
+   docker run --privileged -it --net=host --device=/dev/your_wifi_interface kali
+   ```
+
+   Replace `/dev/your_wifi_interface` with the actual path to your Wi-Fi interface (e.g., `wlan0`).
+
+4. **Install necessary tools**:
+   Ensure that tools like `airmon-ng`, `iwconfig`, and `aircrack-ng` are installed inside your Kali container. You can install them if not already present:
+   
+   ```bash
+   sudo apt update
+   sudo apt install aircrack-ng
+   ```
+
+5. **Enable monitor mode**:
+   Inside the container, run the following commands to enable monitor mode on your Wi-Fi adapter:
+   
+   ```bash
+   airmon-ng start wlan0
+   ```
+
+   Replace `wlan0` with the interface name detected in your system.
+
+### Caveats:
+- **Network isolation**: Since Docker containers are isolated from the host system's networking stack, using `--net=host` is crucial for direct hardware access. However, this means the container shares the same network namespace as your host.
+  
+- **Wi-Fi drivers**: If the container fails to recognize the Wi-Fi receiver, it might be due to missing drivers. In this case, you might need to install or pass the necessary drivers from the host system.
+
+Would you like guidance on setting up the container or troubleshooting any issues you face?
