@@ -1,0 +1,108 @@
+Here's a step-by-step guide to create a Docker container running Nginx, set up a volume for persistent storage, and create a user with permissions to access the container and volume.
+
+### 1. Create `Dockerfile` for Nginx
+
+We'll create a Dockerfile for Nginx where we create a user and give permission to use the volume.
+
+```Dockerfile
+# Dockerfile
+
+# Use the official Nginx image
+FROM nginx:latest
+
+# Create a user named 'dockeruser'
+RUN useradd -ms /bin/bash dockeruser
+
+# Set up the work directory
+WORKDIR /usr/share/nginx/html
+
+# Copy default Nginx configuration to the container
+COPY ./default.conf /etc/nginx/conf.d/default.conf
+
+# Give ownership of the directory to 'dockeruser'
+RUN chown -R dockeruser:dockeruser /usr/share/nginx/html
+
+# Expose port 80 for Nginx
+EXPOSE 80
+
+# Run Nginx as 'dockeruser'
+USER dockeruser
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### 2. Create Nginx Configuration File
+
+Create a custom `default.conf` file for Nginx if needed, or use the default configuration.
+
+```conf
+# default.conf
+
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+}
+```
+
+### 3. Create a Volume for Nginx
+
+The volume will be created and mounted from the host machine. On the host machine, create the folder that will be used as a volume.
+
+```bash
+mkdir -p ~/nginx_volume/html
+```
+
+### 4. Run the Docker Container
+
+Now, we will build and run the Docker container, binding the volume from the host to the container.
+
+```bash
+# Build the Docker image
+docker build -t custom-nginx .
+
+# Run the container and mount the volume
+docker run -d \
+  -p 8080:80 \
+  -v ~/nginx_volume/html:/usr/share/nginx/html \
+  --name nginx-container custom-nginx
+```
+
+### 5. Create a User on Host and Give Permissions
+
+Create a user on the host machine that will have permissions to access the `nginx_volume`.
+
+```bash
+# Add a new user 'hostuser'
+sudo adduser hostuser
+
+# Give 'hostuser' ownership of the volume
+sudo chown -R hostuser:hostuser ~/nginx_volume
+```
+
+Now the `hostuser` has permission to modify files in the volume directory (`~/nginx_volume`), which will be reflected in the running container.
+
+### 6. Verify the Setup
+
+1. **Check container is running:**
+
+   ```bash
+   docker ps
+   ```
+
+2. **Verify volume mount:**
+
+   Edit or add a file to `~/nginx_volume/html/index.html` on the host. For example:
+
+   ```html
+   <h1>Hello, Nginx with Docker!</h1>
+   ```
+
+   Visit `http://localhost:8080` in your browser, and you should see the content served from your mounted volume.
+
+Now, you have an Nginx container running with a mounted volume and a user that has the necessary permissions to access and modify the files both on the host and within the container.
