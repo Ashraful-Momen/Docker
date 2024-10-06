@@ -1,0 +1,116 @@
+#for low size image use : docker slim / alpine version, another way use Dristooles images also . 
+
+# for creating small size of docker build image use multi stage technique. 
+#when build image of docker then size compress as zip. 
+
+Dockerfile=> For multi stage (decrease the image size ) 
+--------------
+#------stage 1-----#
+FROM node:18-alpine AS builder
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install --force
+COPY . .
+RUN npm run build
+# --------stage2 ---#
+FROM node:18-alpine
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app/build ./build
+RUN npm install -g serve
+EXPOSE 3000
+CMD ["serve", "-s", "build", "-l", "3000"]
+
+#for full stack app build with docker compose git link => https://github.com/nahidkishore/e-commerce-shop
+# -----------------------------------------------------------------------------------------------------
+    Mern Stack Docker-compose file:
+        services:
+          mongodb:
+           container_name: mongo
+           image: mongo:latest
+           volumes:
+             - mongo-data:/data/db
+             - ./backend/data/sample_posts.json:/docker-entrypoint-initdb.d/sample_posts.json
+           ports:
+             - "27017:27017"
+           networks:
+             - wanderlust-net
+           restart: unless-stopped
+        
+          backend:
+            container_name: backend
+            build:
+             context: ./backend
+            env_file:
+             - ./backend/.env.sample
+            ports:
+              - "5000:5000"
+            networks:
+              - wanderlust-net
+            depends_on:
+              - mongodb
+            restart: unless-stopped
+          frontend:
+            container_name: frontend
+            build:
+             context: ./frontend
+            env_file:
+             - ./frontend/.env.sample
+            ports:
+              - "5173:5173"
+            networks:
+              - wanderlust-net
+            restart: unless-stopped
+        volumes:
+          mongo-data:
+           driver: local
+        networks:
+          wanderlust-net:
+            driver: bridge
+
+
+# ------------------------------------------------------------------------------------------------
+#docker compose for build full stack app => https://github.com/nahidkishore/two-tier-app: 
+#tow-tier-app: (docker-compose.yml)
+--------------------------------------
+    version: '3'
+services:
+  backend:
+    container_name: "flask-app-backend"
+    image: nahid0002/flask-app:latest
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: "mysql"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "admin"
+      MYSQL_DB: "myDb"
+    depends_on:
+      - mysql
+    networks:
+      - two-tier-net
+
+
+  mysql:
+    container_name: "mysql-db"
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: myDb
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "admin"
+      MYSQL_ROOT_PASSWORD : "admin"
+
+    volumes:
+      - ./message.sql:/docker-entrypoint-initdb.d/message.sql
+      - mysql-data:/var/lib/mysql
+    networks:
+      - two-tier-net
+
+volumes:
+  mysql-data:
+networks:
+  two-tier-net:
+    name: two-tier-net
+    driver: bridge
+
