@@ -81,5 +81,9 @@ To view detailed information about a Docker image:
 ```bash
 docker inspect <image_id_or_tag>
 ```
+#Command Delete all images form: 
+----------------------------------
+>>> docker rmi $(docker images -q)
+>>> docker rmi -f $(docker images -q) | delete images force_fully
 
 These commands will help you effectively manage Docker images in your development and production environments.
