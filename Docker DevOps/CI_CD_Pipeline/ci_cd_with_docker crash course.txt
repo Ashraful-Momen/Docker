@@ -1,0 +1,258 @@
+# GitLab CI/CD and Docker Crash Course Cheat Sheet
+
+## GitLab CI/CD Basics
+
+### .gitlab-ci.yml Structure
+```yaml
+# Basic structure
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  VARIABLE_NAME: "value"
+
+cache:
+  paths:
+    - node_modules/
+    - vendor/
+
+# Job template
+job_name:
+  stage: build
+  script:
+    - command1
+    - command2
+  only:
+    - master
+  tags:
+    - docker
+```
+
+### Common Pipeline Stages
+```yaml
+# Complete pipeline example
+stages:
+  - build
+  - test
+  - quality
+  - deploy_staging
+  - deploy_production
+
+build:
+  stage: build
+  script:
+    - docker build -t myapp:$CI_COMMIT_SHA .
+  
+test:
+  stage: test
+  script:
+    - docker run myapp:$CI_COMMIT_SHA npm test
+
+deploy_staging:
+  stage: deploy_staging
+  script:
+    - deploy_to_staging.sh
+  environment:
+    name: staging
+```
+
+### GitLab CI Variables
+```yaml
+# Predefined Variables
+$CI_COMMIT_SHA         # Commit SHA
+$CI_COMMIT_REF_NAME    # Branch or tag name
+$CI_PROJECT_DIR        # Project directory
+$CI_RUNNER_TAGS       # Runner tags
+$CI_PIPELINE_ID       # Pipeline ID
+
+# Custom Variables
+variables:
+  DATABASE_URL: "postgres://user:pass@db:5432/dbname"
+  API_TOKEN: $SECRET_TOKEN  # Set in GitLab UI
+```
+
+## Docker Commands
+
+### Basic Docker Commands
+```bash
+# Images
+docker build -t image-name:tag .           # Build image
+docker pull image-name:tag                 # Pull image
+docker push image-name:tag                 # Push image
+docker images                              # List images
+docker rmi image-name                      # Remove image
+
+# Containers
+docker run -d --name container-name image  # Run container
+docker ps                                  # List running containers
+docker ps -a                               # List all containers
+docker stop container-name                 # Stop container
+docker rm container-name                   # Remove container
+docker logs container-name                 # View logs
+
+# Network
+docker network create network-name         # Create network
+docker network connect network-name cont   # Connect to network
+```
+
+### Dockerfile Examples
+```dockerfile
+# Basic Node.js Application
+FROM node:14
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+
+# Multi-stage Build (Frontend)
+FROM node:14 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+```
+
+### Docker Compose
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+## CI/CD Pipeline Integration
+
+### Complete GitLab CI/CD with Docker Example
+```yaml
+image: docker:20.10.16
+
+services:
+  - docker:20.10.16-dind
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2376
+
+stages:
+  - build
+  - test
+  - deploy
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+test:
+  stage: test
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker run $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA npm test
+
+deploy:
+  stage: deploy
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - master
+```
+
+### Common Pipeline Patterns
+
+#### Caching Dependencies
+```yaml
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
+```
+
+#### Environment Specific Deployments
+```yaml
+deploy_staging:
+  stage: deploy
+  script:
+    - deploy_script.sh
+  environment:
+    name: staging
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  script:
+    - deploy_script.sh
+  environment:
+    name: production
+  when: manual
+  only:
+    - master
+```
+
+#### Testing with Different Versions
+```yaml
+test:
+  parallel:
+    matrix:
+      - NODE_VERSION: ["14", "16", "18"]
+  image: node:${NODE_VERSION}
+  script:
+    - npm install
+    - npm test
+```
+
+## Best Practices
+
+### Security
+- Use secrets/variables for sensitive data
+- Implement security scanning
+- Use specific image tags instead of 'latest'
+- Regularly update base images
+
+### Performance
+- Use multi-stage builds
+- Implement caching strategies
+- Optimize Docker layers
+- Clean up unused images/containers
+
+### Maintainability
+- Use version tagging
+- Document pipeline configurations
+- Implement automated testing
+- Use consistent naming conventions
+
+### Monitoring
+- Set up pipeline monitoring
+- Implement logging
+- Configure alerts
+- Track deployment metrics
