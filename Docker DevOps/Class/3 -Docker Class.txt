@@ -31,6 +31,8 @@ EXPOSE 80
 >>>>docker ps | show the running container. 
 
 ================= Push the img to the Docker Hub ============================
+>>> docker tag your-image-name:tag username/repository:tag
+
 PS J:\Dokcer DevOps Class Batch 2409\Test> docker tag host_web_file:latest amshuvo64/test:upload_image
 PS J:\Dokcer DevOps Class Batch 2409\Test> docker push amshuvo64/test:upload_image 
 The push refers to repository [docker.io/amshuvo64/test]
