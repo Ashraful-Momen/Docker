@@ -17,3 +17,7 @@ docker/mysql/my.cnf
 .env.docker (root)
 setup.sh (root)
 
+# 1 click to install all setup : 
+--------------------------------
+>>> sudo chmod +x setup.sh
+>>> ./setup.sh
