@@ -45,6 +45,10 @@ Great! Your containers are running successfully! 🎉 Let me help you with the c
 # Correct command (exec, not exe)
 docker exec -it laravel_app bash
 
+
+# Access container as root
+docker exec -it -u root laravel_app bash
+
 # Or use docker-compose
 docker-compose exec app bash
 ```
