@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
     libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     git \
@@ -46,7 +47,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 RUN pecl install redis \
     && docker-php-ext-enable redis
 
-# Install Composer
+# Install Composer : It’s pulling the composer binary from the official Composer Docker image and copying it into your php:fpm container.
+# This is the location inside the composer:latest image where the Composer binary lives:/usr/bin/composer -> my container -> /usr/bin/composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy PHP configuration
