@@ -21,6 +21,7 @@ services:
           - node.role == worker
     volumes:
       - app_data:/var/www/html
+      - ./storage:/var/www/html/storage
     networks:
       - laravel_network
     depends_on:
