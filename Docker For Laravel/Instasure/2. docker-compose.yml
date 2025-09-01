@@ -33,20 +33,11 @@ services:
     depends_on:
       - app
 
-  # MySQL Database - UPDATED WITH TIMEOUT CONFIGS
+  # MySQL Database (using my.cnf instead of command overrides)
   mysql:
     image: mysql:8.0
     container_name: laravel_mysql
     restart: unless-stopped
-    # Added command with timeout and packet size configurations
-    command: >
-      --max_allowed_packet=1024M
-      --net_read_timeout=600
-      --net_write_timeout=600
-      --wait_timeout=28800
-      --interactive_timeout=28800
-      --innodb_lock_wait_timeout=300
-      --innodb_buffer_pool_size=1G
     environment:
       MYSQL_DATABASE: laravel_db
       MYSQL_ROOT_PASSWORD: root_password
@@ -56,7 +47,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf   # <── use config file
     networks:
       - laravel_network
 
@@ -83,7 +74,7 @@ services:
       - laravel_network
     command: sh -c "npm install && npm run dev"
 
-  # PHPMyAdmin - UPDATED WITH TIMEOUT AND UPLOAD CONFIGS
+  # PHPMyAdmin
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: laravel_phpmyadmin
@@ -93,14 +84,12 @@ services:
       PMA_PORT: 3306
       PMA_USER: root
       PMA_PASSWORD: root_password
-      # Added upload and timeout limits
       UPLOAD_LIMIT: 2048M
       MAX_EXECUTION_TIME: 0
       MEMORY_LIMIT: 2048M
     ports:
       - "8081:80"
     volumes:
-      # Added volume for PHP configuration
       - ./docker/phpmyadmin/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       - laravel_network
