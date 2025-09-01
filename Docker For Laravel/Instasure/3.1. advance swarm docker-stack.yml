@@ -1,0 +1,434 @@
+# docker-stack.yml - Complete Docker Swarm Configuration
+version: '3.8'
+
+services:
+  # Laravel App with Data Persistence
+  app:
+    image: instasure-dockerized_app:latest  # Your built image
+    deploy:
+      replicas: 2  # High availability with 2 replicas
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 15s
+        failure_action: rollback
+        monitor: 60s
+      rollback_config:
+        parallelism: 1
+        delay: 0s
+        monitor: 60s
+      placement:
+        constraints:
+          - node.role != manager  # Run on worker nodes
+        preferences:
+          - spread: node.labels.zone
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    working_dir: /var/www/html
+    volumes:
+      # Laravel app data persistence
+      - laravel_public:/var/www/html/public
+      - laravel_storage:/var/www/html/storage
+      - laravel_bootstrap_cache:/var/www/html/bootstrap/cache
+      - laravel_vendor:/var/www/html/vendor
+      - laravel_node_modules:/var/www/html/node_modules
+      # Configuration files
+      - laravel_configs:/var/www/html/config:ro
+    networks:
+      - laravel_network
+    environment:
+      - PHP_MEMORY_LIMIT=256M
+      - PHP_MAX_EXECUTION_TIME=300
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t && curl -f http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - mysql
+      - redis
+
+  # Nginx Load Balancer with SSL Support
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager  # Run on manager nodes
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    volumes:
+      # Shared Laravel app files for Nginx
+      - laravel_public:/var/www/html/public:ro
+      - nginx_configs:/etc/nginx/conf.d:ro
+      - ssl_certs:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - laravel_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - app
+
+  # MySQL Database with Persistent Storage & Backup
+  mysql:
+    image: mysql:8.0
+    deploy:
+      replicas: 1  # Single replica for database consistency
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+        window: 300s
+      placement:
+        constraints:
+          - node.role == manager  # Run on manager node for stability
+          - node.labels.mysql == true  # Optional: dedicated node for MySQL
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    environment:
+      MYSQL_DATABASE: laravel_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - target: 3306
+        published: 3307
+        protocol: tcp
+        mode: host
+    volumes:
+      # MySQL data persistence
+      - mysql_data:/var/lib/mysql
+      - mysql_config:/etc/mysql/conf.d:ro
+      - mysql_logs:/var/log/mysql
+      - mysql_backup:/backup
+    networks:
+      - laravel_network
+    command: >
+      --max_allowed_packet=1024M
+      --net_read_timeout=600
+      --net_write_timeout=600
+      --wait_timeout=28800
+      --interactive_timeout=28800
+      --innodb_lock_wait_timeout=300
+      --innodb_buffer_pool_size=1G
+      --log-bin=mysql-bin
+      --binlog_format=mixed
+      --expire_logs_days=7
+      --slow_query_log=1
+      --long_query_time=2
+      --slow_query_log_file=/var/log/mysql/slow.log
+      --general_log=1
+      --general_log_file=/var/log/mysql/general.log
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # Redis for Caching/Sessions with Persistence
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role != manager
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    ports:
+      - target: 6379
+        published: 6380
+        protocol: tcp
+        mode: host
+    volumes:
+      - redis_data:/data
+      - redis_config:/usr/local/etc/redis:ro
+    networks:
+      - laravel_network
+    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 200mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # PHPMyAdmin for Database Management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_password
+      UPLOAD_LIMIT: 2048M
+      MAX_EXECUTION_TIME: 0
+      MEMORY_LIMIT: 2048M
+      PMA_ARBITRARY: 1
+    ports:
+      - target: 80
+        published: 8081
+        protocol: tcp
+        mode: ingress
+    networks:
+      - laravel_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - mysql
+
+  # Node.js for Asset Compilation
+  node:
+    image: node:18-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 2
+      placement:
+        constraints:
+          - node.role != manager
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    working_dir: /var/www/html
+    volumes:
+      - laravel_public:/var/www/html/public
+      - laravel_node_modules:/var/www/html/node_modules
+      - node_source:/var/www/html/resources:ro
+    networks:
+      - laravel_network
+    command: sh -c "npm install && npm run build && npm run watch"
+    healthcheck:
+      test: ["CMD", "node", "--version"]
+      interval: 60s
+      timeout: 10s
+      retries: 2
+
+  # Container Health Monitor Service
+  monitor:
+    image: alpine:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - monitor_scripts:/scripts
+      - monitor_logs:/logs
+    networks:
+      - laravel_network
+    environment:
+      - STACK_NAME=laravel
+      - EMAIL_TO=your-email@example.com
+      - EMAIL_FROM=monitor@instasure.com
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your-smtp-user
+      - SMTP_PASS=your-smtp-password
+    command: >
+      sh -c "apk add --no-cache curl docker-cli ssmtp mailx &&
+             while true; do
+               /scripts/monitor_swarm.sh;
+               sleep 60;
+             done"
+
+# Persistent Volumes for Data
+volumes:
+  # Laravel Application Data
+  laravel_public:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/public
+  laravel_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/storage
+  laravel_bootstrap_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/bootstrap-cache
+  laravel_vendor:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/vendor
+  laravel_node_modules:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/node_modules
+  laravel_configs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/laravel/config
+
+  # MySQL Data Persistence
+  mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/mysql/data
+  mysql_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/mysql/config
+  mysql_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/mysql/logs
+  mysql_backup:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/mysql/backup
+
+  # Redis Data
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/redis/data
+  redis_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/redis/config
+
+  # Nginx Configuration
+  nginx_configs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/nginx/config
+  ssl_certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/nginx/ssl
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/nginx/logs
+
+  # Node.js Source
+  node_source:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/node/resources
+
+  # Monitoring
+  monitor_scripts:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/monitor/scripts
+  monitor_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/docker-volumes/monitor/logs
+
+# Networks
+networks:
+  laravel_network:
+    driver: overlay
+    attachable: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.0.0/24
