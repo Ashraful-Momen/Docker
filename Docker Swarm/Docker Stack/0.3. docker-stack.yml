@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # Composer Init Container
+  composer:
+    image: composer:2
+    volumes:
+      - /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized:/app
+    working_dir: /app
+    command: install --no-dev --optimize-autoloader
+    deploy:
+      restart_policy:
+        condition: none
+
+  # Laravel App with Replicas
+  app:
+    image: instasure-dockerized_app:latest
+    deploy:
+      replicas: 12
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized:/var/www/html
+    networks:
+      - laravel_network
+    depends_on:
+      - mysql
+      - redis
+      - composer
+
+  # Rest of your services remain the same...
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/public:/var/www/html/public:ro
+    networks:
+      - laravel_network
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+    environment:
+      MYSQL_DATABASE: laravel_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - laravel_network
+    command: >
+      --max_allowed_packet=1024M
+      --net_read_timeout=600
+      --net_write_timeout=600
+      --wait_timeout=28800
+      --interactive_timeout=28800
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - laravel_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_password
+      UPLOAD_LIMIT: 2048M
+    ports:
+      - "8081:80"
+    networks:
+      - laravel_network
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  laravel_network:
+    driver: overlay
+    attachable: true
