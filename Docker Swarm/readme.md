@@ -1,4 +1,4 @@
-in the docker-stack file use the correct images name , volume path for avoing the scaling up and replication error . 
+First readout the Docker DevOps/Class/docker swarm notes then => in the docker-stack file use the correct images name , volume path for avoing the scaling up and replication error . 
 
 
 1. To run the docker-stack.yml :
