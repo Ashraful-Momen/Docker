@@ -1,0 +1,254 @@
+# 🚀 Laravel Docker Swarm Stack
+
+## 📋 Overview
+
+This Docker Stack deploys a **high-availability Laravel application** using Docker Swarm mode. The stack includes multiple replicas for load balancing, persistent data storage, and automated dependency management.
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Internet      │────│  Load Balancer   │────│  Laravel Apps   │
+│                 │    │  (Nginx x4)      │    │  (12 replicas)  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                        │
+                       ┌─────────────────┐             │
+                       │   PHPMyAdmin    │             │
+                       │   (Web UI)      │             │
+                       └─────────────────┘             │
+                                                        │
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│     MySQL       │────│     Redis        │────│    Composer     │
+│  (Database)     │    │   (Caching)      │    │  (Dependencies) │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## 🛠️ Services Breakdown
+
+### 1. **Composer Init Container**
+```yaml
+composer:
+  image: composer:2
+  command: install --no-dev --optimize-autoloader
+```
+**Purpose**: Installs PHP dependencies before the Laravel app starts
+- **Runs once** to install vendor packages
+- **No restart policy** - exits after completion
+- Essential for Laravel autoloading
+
+### 2. **Laravel Application** ⚡
+```yaml
+app:
+  image: instasure-dockerized_app:latest
+  replicas: 12
+```
+**Purpose**: Main Laravel application with high availability
+- **12 replicas** for maximum performance and redundancy
+- **Rolling updates** with 1 container at a time
+- **Auto-restart** on failure with 3 max attempts
+- **Manager nodes only** for stability
+
+**Key Features**:
+- ✅ Zero-downtime deployments
+- ✅ Automatic failover
+- ✅ Load distribution across 12 instances
+
+### 3. **Nginx Load Balancer** 🔄
+```yaml
+nginx:
+  image: nginx:alpine
+  replicas: 4
+  ports: ["80:80", "443:443"]
+```
+**Purpose**: Distributes traffic across Laravel app instances
+- **4 replicas** for load balancer redundancy
+- **Handles HTTP/HTTPS** traffic
+- **Static file serving** for better performance
+- **Read-only** access to public files
+
+### 4. **MySQL Database** 🗄️
+```yaml
+mysql:
+  image: mysql:8.0
+  replicas: 1
+  ports: ["3307:3306"]
+```
+**Purpose**: Primary database with optimized settings
+- **Single replica** (databases don't scale horizontally)
+- **Persistent storage** with named volumes
+- **Optimized timeouts** for large operations
+- **External access** via port 3307
+
+**Optimizations**:
+- 📈 1GB max packet size
+- ⏱️ Extended timeout settings
+- 💾 Persistent data storage
+
+### 5. **Redis Cache** 🚀
+```yaml
+redis:
+  image: redis:7-alpine
+  ports: ["6380:6379"]
+```
+**Purpose**: In-memory caching and session storage
+- **Lightning-fast** data access
+- **Persistent cache** across restarts
+- **External access** via port 6380
+
+### 6. **PHPMyAdmin** 🖥️
+```yaml
+phpmyadmin:
+  image: phpmyadmin/phpmyadmin
+  ports: ["8081:80"]
+```
+**Purpose**: Web-based database management interface
+- **Easy database administration**
+- **Large file uploads** (2GB limit)
+- **Secure connection** to MySQL
+
+## 🌐 Network & Storage
+
+### Network Configuration
+```yaml
+networks:
+  laravel_network:
+    driver: overlay
+    attachable: true
+```
+- **Overlay network** for multi-host communication
+- **Attachable** for debugging and management
+- **Encrypted** inter-service communication
+
+### Persistent Volumes
+```yaml
+volumes:
+  mysql_data:    # Database files
+  redis_data:    # Cache persistence
+```
+- **Local driver** for data persistence
+- **Survives container restarts**
+- **Managed by Docker**
+
+## 🚀 Deployment Commands
+
+### Initial Setup
+```bash
+# 1. Initialize Docker Swarm
+docker swarm init
+
+# 2. Deploy the stack
+docker stack deploy -c docker-stack.yml laravel
+
+# 3. Monitor deployment
+docker service ls
+```
+
+### Management Commands
+```bash
+# Scale Laravel app
+docker service scale laravel_app=20
+
+# Update a service
+docker service update laravel_app
+
+# View service logs
+docker service logs laravel_app
+
+# Remove the stack
+docker stack rm laravel
+```
+
+## 📊 Scaling Configuration
+
+| Service | Replicas | Reason |
+|---------|----------|--------|
+| **Laravel App** | 12 | High traffic handling |
+| **Nginx** | 4 | Load balancer redundancy |
+| **MySQL** | 1 | Database consistency |
+| **Redis** | 1 | Cache coherency |
+| **PHPMyAdmin** | 1 | Admin interface |
+
+## 🔗 Port Mapping
+
+| Service | Internal Port | External Port | Purpose |
+|---------|---------------|---------------|---------|
+| **Nginx** | 80/443 | 80/443 | Web traffic |
+| **MySQL** | 3306 | 3307 | Database access |
+| **Redis** | 6379 | 6380 | Cache access |
+| **PHPMyAdmin** | 80 | 8081 | DB management |
+
+## 🎯 Access Points
+
+- **🌐 Website**: `http://your-server/`
+- **🔐 HTTPS**: `https://your-server/` (if SSL configured)
+- **📊 Database Admin**: `http://your-server:8081/`
+- **🗄️ Direct MySQL**: `your-server:3307`
+- **⚡ Direct Redis**: `your-server:6380`
+
+## ⚠️ Important Notes
+
+### High Availability Features
+- **✅ Zero-downtime deployments** with rolling updates
+- **✅ Automatic container restart** on failure
+- **✅ Load balancing** across multiple app instances
+- **✅ Database persistence** survives container restarts
+
+### Security Considerations
+- 🔒 Change default MySQL passwords in production
+- 🔒 Use environment files for sensitive data
+- 🔒 Configure SSL certificates for HTTPS
+- 🔒 Restrict external database access
+
+### Performance Optimization
+- 📈 **12 Laravel replicas** handle high concurrent users
+- 📈 **4 Nginx replicas** distribute load efficiently  
+- 📈 **Redis caching** reduces database load
+- 📈 **Optimized MySQL settings** for large operations
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Composer Dependencies Missing**
+```bash
+# Check if vendor folder exists
+docker exec -it $(docker ps -q -f name=laravel_app) ls -la /var/www/html/vendor
+```
+
+**Service Not Starting**
+```bash
+# Check service status
+docker service ps laravel_app --no-trunc
+
+# View detailed logs
+docker service logs -f laravel_app
+```
+
+**Database Connection Issues**
+```bash
+# Test MySQL connection
+docker exec -it $(docker ps -q -f name=laravel_mysql) mysql -u laravel_user -p laravel_db
+```
+
+### Health Checks
+```bash
+# Monitor all services
+watch 'docker service ls'
+
+# Check resource usage
+docker stats
+
+# View stack events
+docker events --filter type=service
+```
+
+## 🎉 Success Indicators
+
+When everything is working correctly, you should see:
+- ✅ All services showing `REPLICAS: X/X` (desired/running)
+- ✅ Website accessible on port 80/443
+- ✅ PHPMyAdmin accessible on port 8081
+- ✅ No error logs in service outputs
+- ✅ Fast response times due to load balancing
+
+This configuration provides a robust, scalable Laravel deployment capable of handling high traffic loads with automatic failover and zero-downtime updates!
