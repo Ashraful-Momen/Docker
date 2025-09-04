@@ -1,0 +1,2 @@
+# Get logs from a running nginx container
+docker service logs laravel_nginx --raw --follow --tail 50
