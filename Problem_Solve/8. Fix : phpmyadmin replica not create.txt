@@ -1,0 +1,85 @@
+if the /laravel_project/docker/phpmyadmin/upload.ini file is not exit then not replicate with docker swarm. 
+
+#check the service log : 
+------------------------
+>>> docker service log container_name
+
+
+
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ ls -la /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini
+ls: cannot access '/home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini': No such file or directory
+                                                                                                                                                                     
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ mkdir -p /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/
+echo "upload_max_filesize = 64M
+post_max_size = 64M
+max_execution_time = 600" > /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini
+                                                                                                                                                                     
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ mkdir -p /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/
+echo "upload_max_filesize = 64M
+post_max_size = 64M
+max_execution_time = 600" > /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini
+                                                                                                                                                                     
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ ls -la /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini  
+-rw-rw-r-- 1 ashraful ashraful 71 Sep  4 10:43 /home/ashraful/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized/docker/phpmyadmin/upload.ini
+
+
+
+#again run the docker-stack.yml : 
+----------------------------------
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ docker service ps laravel_phpmyadmin
+ID             NAME                       IMAGE                          NODE      DESIRED STATE   CURRENT STATE           ERROR                              PORTS
+clp2ktjjebyg   laravel_phpmyadmin.1       phpmyadmin/phpmyadmin:latest   kali      Shutdown        Rejected 42 hours ago   "invalid mount config for type…"   
+chxgomkzi8mp    \_ laravel_phpmyadmin.1   phpmyadmin/phpmyadmin:latest   kali      Shutdown        Rejected 42 hours ago   "invalid mount config for type…"   
+xrw0p343yit7    \_ laravel_phpmyadmin.1   phpmyadmin/phpmyadmin:latest   kali      Shutdown        Rejected 42 hours ago   "invalid mount config for type…"   
+m35e5dmuqps7    \_ laravel_phpmyadmin.1   phpmyadmin/phpmyadmin:latest   kali      Shutdown        Rejected 42 hours ago   "invalid mount config for type…"   
+                                                                                                                                                                     
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ docker stack ls                                
+NAME      SERVICES
+laravel   7
+                                                                                                                                                                                                                                
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ docker stack rm laravel
+Removing service laravel_app
+Removing service laravel_composer
+Removing service laravel_mysql
+Removing service laravel_nginx
+Removing service laravel_node
+Removing service laravel_phpmyadmin
+Removing service laravel_redis
+Removing network laravel_default
+Removing network laravel_laravel_network
+                                                                                                                                                                                                                                
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ sleep 15       
+                                                                                                                                                                                                                                
+┌──(ashraful㉿kali)-[~/Laravel_version_test/LaravelPHP83Docker/instasure-dockerized]
+└─$ docker stack deploy -c docker-stack.yml laravel
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
+Creating network laravel_laravel_network
+Creating network laravel_default
+Creating service laravel_nginx
+Creating service laravel_mysql
+Creating service laravel_redis
+Creating service laravel_phpmyadmin
+Creating service laravel_composer
+Creating service laravel_node
+Creating service laravel_app
+
+┌──(ashraful㉿kali)-[~]
+└─$ docker service ls
+ID             NAME                 MODE         REPLICAS   IMAGE                             PORTS
+87k5qb552ojx   laravel_app          replicated   12/12      instasure-dockerized_app:latest   
+mt82qswjyr3h   laravel_composer     replicated   0/1        composer:2                        
+pqdlc4lk7q41   laravel_mysql        replicated   1/1        mysql:8.0                         *:3307->3306/tcp
+5jc1hogspawh   laravel_nginx        replicated   3/4        nginx:alpine                      *:80->80/tcp, *:443->443/tcp
+izge39qbjnmo   laravel_node         replicated   1/1        node:18-alpine                    
+wujwz9imfkgt   laravel_phpmyadmin   replicated   1/1        phpmyadmin/phpmyadmin:latest      *:8081->80/tcp
+kzwm1ngl73vw   laravel_redis        replicated   1/1        redis:7-alpine                    *:6380->6379/tcp
+   
