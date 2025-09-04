@@ -1,2 +1,7 @@
 # Get logs from a running nginx container
 docker service logs laravel_nginx --raw --follow --tail 50
+
+
+# This Application Running with Docker Swarm => Check Laravel logs for detailed error information
+docker exec -it $(docker ps --filter label=com.docker.swarm.service.name=laravel_app -q | head -1) cat storage/logs/laravel.log | tail -20
+
