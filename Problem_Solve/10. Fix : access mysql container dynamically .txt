@@ -1,0 +1,5 @@
+-q reeturn the container_id only and -f : filter the name of container . 
+
+
+>>>docker exec -it $(docker ps -qf "name=mysql") mysql -u laravel_user -p -h localhost -P 3306 laravel_db
+
