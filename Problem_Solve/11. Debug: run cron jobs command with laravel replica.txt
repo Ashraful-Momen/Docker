@@ -1,0 +1,180 @@
+#for modify the cron system file open => 
+------------------------------------------
+>>> crontab -e
+
+#inside the file write : 
+-------------------------
+>>>docker exec $(docker ps --filter "name=laravel_app" --format "{{.Names}}") php /var/www/html/artisan schedule:run
+
+#docker-stack.yml : 
+-------------------
+
+version: '3.8'
+
+services:
+  # Laravel App with S3 environment variables
+  app:
+    image: instasure-dockerized_app:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    working_dir: /var/www/html
+    environment:
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=laravel_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=laravel_password
+
+      # Redis Configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+
+      # S3 Configuration
+      - FILESYSTEM_DRIVER=s3
+      # - S3_KEY=test
+      - S3_KEY=YIWBL4D04XN2XK6KDD87
+      - S3_SECRET=Ro06JYVkWpkQKqwbAnVrjhRbnNSieIKUIqmn7ZoR
+      - S3_REGION=us-east-1
+      - S3_BUCKET=instasure
+      - S3_URL=https://s3.brilliant.com.bd/instasure
+      - S3_ENDPOINT=https://s3.brilliant.com.bd
+      - S3_USE_PATH_STYLE=true
+
+      # Storage Configuration
+      - STORAGE_PRIMARY=s3
+      - STORAGE_FALLBACK=fallback
+      # - STORAGE_FALLBACK=local
+      - STORAGE_SYNC_ENABLED=true
+      - STORAGE_AUTO_RETRY=true
+      - STORAGE_MAX_RETRIES=3
+
+      # App Configuration
+      - APP_ENV=production
+      - APP_DEBUG=true
+      # - APP_URL=http://vm2.instasure.xyz:8080
+      - APP_URL=http://36.255.69.72:8080
+    volumes:
+      - /home/ashraful/gitlab_project/instasure-dockerized:/var/www/html
+      - /home/ashraful/gitlab_project/instasure-dockerized/docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel_network  # ADD THIS LINE
+    depends_on:
+      - mysql
+      - redis
+
+  # Nginx with proper configuration
+  nginx:
+    image: nginx:alpine
+    deploy:
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /home/ashraful/gitlab_project/instasure-dockerized:/var/www/html
+      - /home/ashraful/gitlab_project/instasure-dockerized/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - laravel_network
+    depends_on:
+      - app
+
+  # MySQL - unchanged
+  mysql:
+    image: mysql:8.0
+    deploy:
+      replicas: 1
+    environment:
+      - MYSQL_DATABASE=laravel_db
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_USER=laravel_user
+      - MYSQL_PASSWORD=laravel_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - /home/ashraful/gitlab_project/instasure-dockerized/docker/mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - laravel_network
+
+  # Redis - unchanged
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - laravel_network
+
+  # Node.js - unchanged
+  node:
+    image: node:18-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: none
+    working_dir: /var/www/html
+    volumes:
+      - /home/ashraful/gitlab_project/instasure-dockerized:/var/www/html
+    networks:
+      - laravel_network
+    command: sh -c "npm install && npm run dev"
+
+  # PHPMyAdmin - unchanged
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    deploy:
+      replicas: 1
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=root_password
+    ports:
+      - "8081:80"
+    volumes:
+      - /home/ashraful/gitlab_project/instasure-dockerized/docker/phpmyadmin/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - laravel_network
+    depends_on:
+      - mysql
+
+
+ # Dedicated Scheduler Service Run the cron jobs for smart s3 backup.-----------------------Main Part for Cron Jobs---------------------------------------
+  scheduler:
+    image: instasure-dockerized_app:latest
+    deploy:
+      replicas: 1   # Always just ONE scheduler
+      restart_policy:
+        condition: on-failure
+    working_dir: /var/www/html
+    command: >
+      sh -c "while true; do php artisan schedule:run >> /var/www/html/storage/logs/cron.log 2>&1; sleep 60; done"
+    volumes:
+      - /home/ashraful/gitlab_project/instasure-dockerized:/var/www/html
+      - /home/ashraful/gitlab_project/instasure-dockerized/docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel_network
+    depends_on:
+      - mysql
+      - redis
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  laravel_network:
+    driver: overlay
+    attachable: true
+
